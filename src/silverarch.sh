@@ -27,7 +27,7 @@ source /etc/os-*
 
 PATH_SCRIPT="$(dirname "$(readlink -f "$0")")"
 #SILVERARCH_SCRIPT_LINK_MAIN="https://raw.githubusercontent.com/henrikbeck95/testing/main/linux.sh"
-SILVERARCH_SCRIPT_LINK_MAIN="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/main.sh"
+SILVERARCH_SCRIPT_LINK_MAIN="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/silverarch.sh"
 SILVERARCH_SCRIPT_LINK_PROFILE="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/profile.sh"
 SILVERARCH_SCRIPT_PATH="$PATH_SCRIPT/"
 #SILVERARCH_SCRIPT_PATH="$HOME/"
@@ -74,8 +74,6 @@ CONTAINER_MANAGER="podman"
 #EDITOR="vi"
 EDITOR="vim"
 
-#LAYOUT_KEYBOARD="br-abnt2"
-LAYOUT_KEYBOARD="setxkbmap -model abnt2 -layout br"
 #$EDITOR /etc/default/keyboard
 
 case $NAME in
@@ -105,11 +103,8 @@ $TERMINAL_COLOR_ORANGE Basic script file options $TERMINAL_COLOR_END
 -e\t--edit\t\t\t\tEdit this script file
 
 $TERMINAL_COLOR_BLUE Alpine installation setup $TERMINAL_COLOR_END
--al-p01\t--alpine-part-01\t\t
-Install ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
-
--al-p02\t--alpine-part-02\t\t
-Configure and install ArchLinux essential system softwares $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
+-al-p01\t--alpine-part-01\t\tInstall ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
+-al-p02\t--alpine-part-02\t\tConfigure and install ArchLinux essential system softwares $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 
 $TERMINAL_COLOR_BLUE Archlinux installation setup $TERMINAL_COLOR_END
 -ar-p01\t--archlinux-part-01\t\tInstall ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
@@ -813,7 +808,7 @@ tools_package_manager_any_flatpak_software_setup(){
 	display_message_default "Install Flatpak $@ setup"
     
 	case $NAME in
-        "Alipne") display_message_empty ;;
+        "Alpine") display_message_empty ;;
         "Arch Linux") tools_package_manager_archlinux_pacman_software_install flatpak ;;
         "CentOS Linux" | "Fedora") : ;; #Native installed
         *) display_message_error "" ;;
@@ -1753,7 +1748,7 @@ tools_question_username(){
         read -p "Inform the username: " QUESTION_USERNAME #henrikbeck95
 
         case $QUESTION_USERNAME in
-            "") echo "Please answer file or partition." ;;
+            "") echo "Please answer your username." ;;
             *) break ;;
         esac
     done
@@ -3234,26 +3229,38 @@ changing_language(){
 	echo KEYMAP=br-abnt2 >> /etc/vconsole.conf
 }
 
-operating_system_archlinux_changing_language_keyboard(){
+operating_system_changing_language_keyboard(){
 	display_message_default "Changing the keyboard layout settings"
-	
-	loadkeys $LAYOUT_KEYBOARD
+    
+	case $NAME in
+        "Alpine") loadkeys setxkbmap -model abnt2 -layout br ;;
+        "Arch Linux") loadkeys br-abnt2 ;;
+        "CentOS Linux" | "Fedora") : ;; #Native installed
+        *) display_message_error "" ;;
+    esac
+
+	display_message_success "Keyboard layout has been changed"
 }
 
-operating_system_archlinux_changing_language_default(){
-	display_message_default "Changing for Brazilian Portuguese keymap"
+operating_system_changing_language_default(){
+	display_message_default "Changing the keyboard layout to Brazilian Portuguese keymap"
+    
+	case $NAME in
+        "Alpine") : ;;
+        "Arch Linux")
+			display_message_default "Changing for Brazilian Portuguese keymap"
 
-	#Uncomment the line: # pt_BR.UTF-8 UTF-8
-	local FILENAME="/etc/locale.gen"
+			#Uncomment the line: # pt_BR.UTF-8 UTF-8
+			tools_string_replace_text "/etc/locale.gen" "#pt_BR.UTF-8 UTF-8" "pt_BR.UTF-8 UTF-8"
 
-	TEXT_OLD="#pt_BR.UTF-8 UTF-8"
-	TEXT_NEW="pt_BR.UTF-8 UTF-8"
-	sed -i "s/$TEXT_OLD/$TEXT_NEW/g" $FILENAME
+			#Apply the new settings
+			export LANG=pt_BR.UTF-8
+			;;
+        "CentOS Linux" | "Fedora") : ;; #Native installed
+        *) display_message_error "" ;;
+    esac
 
-	#tools_edit_file $FILENAME
-	
-	#Apply the new settings
-	export LANG=pt_BR.UTF-8
+	display_message_success "Keyboard layout has been changed to Brazilian Portuguese keymap"
 }
 
 operating_system_archlinux_changing_password_root(){
@@ -3782,8 +3789,8 @@ calling_alpine(){
 	calling_essential
     tools_question_username
 
-    #operating_system_archlinux_changing_language_keyboard
-    #operating_system_archlinux_changing_language_default
+    #operating_system_changing_language_keyboard
+    #operating_system_changing_language_default
     
 	operating_system_alpine_create_user
 	install_softwares_from_alpine_essential
@@ -3798,8 +3805,8 @@ calling_archlinux_part_01(){
     calling_essential
     tools_question_username
 
-    operating_system_archlinux_changing_language_keyboard
-    operating_system_archlinux_changing_language_default
+    operating_system_changing_language_keyboard
+    operating_system_changing_language_default
 
     if [[ $IS_VIRTUALIATION != "kvm" ]]; then
         operating_system_archlinux_connecting_internet_wifi
