@@ -26,8 +26,9 @@ source /etc/os-*
 #############################
 
 PATH_SCRIPT="$(dirname "$(readlink -f "$0")")"
-SILVERARCH_SCRIPT_LINK="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/main.sh"
-#SILVERARCH_SCRIPT_LINK="https://raw.githubusercontent.com/henrikbeck95/testing/main/linux.sh"
+#SILVERARCH_SCRIPT_LINK_MAIN="https://raw.githubusercontent.com/henrikbeck95/testing/main/linux.sh"
+SILVERARCH_SCRIPT_LINK_MAIN="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/main.sh"
+SILVERARCH_SCRIPT_LINK_PROFILE="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/profile.sh"
 SILVERARCH_SCRIPT_PATH="$PATH_SCRIPT/"
 #SILVERARCH_SCRIPT_PATH="$HOME/"
 #SILVERARCH_SCRIPT_PATH="/root/"
@@ -99,28 +100,28 @@ This is a Linux installation and post installation setup for using the operating
 This script supports Alpine, ArchLinux and Fedora operating systems.
 
 [Parameters]
-$TERMINAL_COLOR_ORANGE\t\t\tBasic script file options $TERMINAL_COLOR_END
+$TERMINAL_COLOR_ORANGE Basic script file options $TERMINAL_COLOR_END
 -h\t--help\t-?\t\t\tDisplay this help message
 -e\t--edit\t\t\t\tEdit this script file
 
-$TERMINAL_COLOR_BLUE\t\t\tAlpine installation setup $TERMINAL_COLOR_END
+$TERMINAL_COLOR_BLUE Alpine installation setup $TERMINAL_COLOR_END
 -al-p01\t--alpine-part-01\t\t
 Install ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 
 -al-p02\t--alpine-part-02\t\t
 Configure and install ArchLinux essential system softwares $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 
-$TERMINAL_COLOR_BLUE\t\t\tArchlinux installation setup $TERMINAL_COLOR_END
+$TERMINAL_COLOR_BLUE Archlinux installation setup $TERMINAL_COLOR_END
 -ar-p01\t--archlinux-part-01\t\tInstall ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 -ar-p02\t--archlinux-part-02\t\tConfigure and install ArchLinux essential system softwares and drivers $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 -ar-p03\t--archlinux-part-03\t\tInstall support platforms $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 
-$TERMINAL_COLOR_BLUE_LIGHT\t\t\tFedora installation setup $TERMINAL_COLOR_END
--f\t--fedora\t\tConfigure and install Fedora essential system softwares $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
+$TERMINAL_COLOR_BLUE_LIGHT Fedora installation setup $TERMINAL_COLOR_END
+-f\t--fedora\t\t\tConfigure and install Fedora essential system softwares $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
 
-$TERMINAL_COLOR_RED_LIGHT\t\t\tOthers installation setup $TERMINAL_COLOR_END
--g\t--global-softwares\t\t\t???
--s\t--system-appearance\t\t\tCustomize operating system appearance
+$TERMINAL_COLOR_RED_LIGHT Others installation setup $TERMINAL_COLOR_END
+-g\t--global-softwares\t\tInstall softwares which can be installed in any Linux operating system distro
+-s\t--system-appearance\t\tCustomize operating system appearance
 -t\t--testing\t\t\tTesting selected functions for debugging this script file
 "
 
@@ -238,7 +239,7 @@ tools_check_if_user_has_root_previledges(){
 }
 
 tools_check_if_virtualization_is_enabled(){
-	if [[ $(egrep '^flags.*(vmx|svm)' /proc/cpuinfo) ]]; then
+	#if [[ $(egrep '^flags.*(vmx|svm)' /proc/cpuinfo) ]]; then
 	if [[ $(LC_ALL=C lscpu | grep Virtualization) ]]; then
 		echo "true"
 	else
@@ -3272,7 +3273,12 @@ operating_system_archlinux_changing_timezone(){
 operating_system_archlinux_mount_chroot(){
 	display_message_default "Log in as root on the ArchLinux which is going to be installed (not the installer iso one)"
 	
-	arch-chroot /mnt/
+	#Run a single command and exit
+	#arch-chroot /mnt/root cp $0
+	#arch-chroot /mnt/usr/bin/ cp $0
+
+	#Enter a chroot
+	#arch-chroot /mnt/
 }
 
 operating_system_archlinux_creating_fstab(){
@@ -3558,20 +3564,26 @@ operating_system_archlinux_partiting_disk(){
 			*) echo "Please answer Y for yes or N for no." ;;
 		esac
 	done
+
+	#sudo mkfs.btrfs -L data /dev/sdb1
+	#mkfs.btrfs -L mylabel /dev/partition
+	#mkfs.btrfs -L mylabel -n 32k /dev/partition
 	
 	#Formatting the partitions
 	if [[ -z $PARTITION_BOOT ]]; then
-		mkfs.fat -F32 $PARTITION_BOOT
+		#mkfs.fat -F32 $PARTITION_BOOT
 		#mkfs.fat -F32 -n ESP $PARTITION_BOOT
-		#mkfs.fat -F32 -n BOOT $PARTITION_BOOT
+		mkfs.fat -F32 -n BOOT $PARTITION_BOOT
 	fi
 
 	if [[ -z $PARTITION_ROOT ]]; then
-		mkfs.btrfs -f $PARTITION_ROOT
+		#mkfs.btrfs -f $PARTITION_ROOT
+		mkfs.btrfs -f -L ROOT $PARTITION_ROOT
 	fi
 	
 	if [[ -z $PARTITION_FILE ]]; then
-		mkfs.ext4 -f $PARTITION_FILE
+		#mkfs.ext4 -f $PARTITION_FILE
+		mkfs.ext4 -f -L FILES $PARTITION_FILE
 	fi
 
 	#Listing all the partition table
