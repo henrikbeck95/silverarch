@@ -3583,21 +3583,13 @@ operating_system_archlinux_partiting_disk(){
 	#mkfs.btrfs -L mylabel -n 32k /dev/partition
 	
 	#Formatting the partitions
-	if [[ -z $PARTITION_BOOT ]]; then
-		#mkfs.fat -F32 $PARTITION_BOOT
-		#mkfs.fat -F32 -n ESP $PARTITION_BOOT
-		mkfs.fat -F32 -n BOOT $PARTITION_BOOT
-	fi
-
-	if [[ -z $PARTITION_ROOT ]]; then
-		#mkfs.btrfs -f $PARTITION_ROOT
-		mkfs.btrfs -f -L ROOT $PARTITION_ROOT
-	fi
-	
-	if [[ -z $PARTITION_FILE ]]; then
-		#mkfs.ext4 -f $PARTITION_FILE
-		mkfs.ext4 -f -L FILES $PARTITION_FILE
-	fi
+	mkfs.fat -F32 $PARTITION_BOOT
+	#mkfs.fat -F32 -n ESP $PARTITION_BOOT
+	#mkfs.fat -F32 -n BOOT $PARTITION_BOOT
+	mkfs.btrfs -f $PARTITION_ROOT
+	#mkfs.btrfs -f -L ROOT $PARTITION_ROOT
+	mkfs.ext4 -f $PARTITION_FILE
+	#mkfs.ext4 -f -L FILES $PARTITION_FILE
 
 	#Listing all the partition table
 	lsblk
