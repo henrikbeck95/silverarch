@@ -3287,8 +3287,12 @@ operating_system_archlinux_mount_chroot(){
 	display_message_default "Log in as root on the ArchLinux which is going to be installed (not the installer iso one)"
 	
 	#Run a single command and exit
-	arch-chroot /mnt/root cp $0
-	arch-chroot /mnt/usr/bin/ cp $0
+	#arch-chroot /mnt/root cp $0
+	#arch-chroot /mnt/usr/bin/ cp $0
+
+	#Copy this script file to the arch-chroot
+	cp $0 /mnt/usr/bin/silverarch
+	tools_give_executable_permission /mnt/usr/bin/silverarch
 
 	#Enter a chroot
 	arch-chroot /mnt/
@@ -3505,7 +3509,7 @@ operating_system_archlinux_installing_bootloader(){
 
 	#Enable Reflector
     tools_system_daemon_systemd_enable_later reflector.timer
-    tools_system_daemon_systemd_enable_later fstrim.timer
+    tools_system_daemon_systemd_enable_later fstrim.timer #ERROR
 
 	#Configuring GRUB by commenting the line: MODULES=()
 	tools_string_replace_text \
