@@ -323,6 +323,8 @@ tools_export_variables_bios(){
 	#Verifying if BIOS supports UEFI by checking if directory is empty
 	if [ -z "$(ls -A /sys/firmware/efi/efivars)" ]; then
 		IS_BIOS_UEFI="legacy" #echo "Empty"
+		
+		display_message_error "Consider enabling the UEFI before keep running this setup installtion. There may be some errors"
 	else
 		IS_BIOS_UEFI="uefi" #"Not Empty"
 	fi
@@ -2485,36 +2487,35 @@ install_softwares_from_archlinux_pacman_essential(){
 	display_message_default "Install essential softwares from Pacman"
 
     tools_package_manager_archlinux_pacman_software_install \
-        alacritty \
         bash-completion \
-        cheese \
         ffmpeg \
         firejail \
         git \
-        gparted \
         htop \
         jq \
         linux-lts \
         lsb-release \
-        neofetch \
         ntfs-3g \
         numlockx \
         redshift \
-		rsync \
-        scrot \
 		subversion \
         tmux \
         unrar \
         unzip \
         wget
 
+        #alacritty \
         #ark \
     	#arandr \
+        #cheese \
+        #gparted \
+        #neofetch \
+		#rsync \
+        #scrot \
 		#xorg-xrandr \
 	
 	display_message_success "Essential softwares from Pacman have been installed"
 }
-
 
 install_softwares_from_archlinux_pacman_laptop_battery(){
 	display_message_default "Install laptop battery improvements softwares"
@@ -2536,22 +2537,17 @@ install_softwares_from_archlinux_pacman_laptop_battery(){
 install_softwares_from_archlinux_pacman_manually(){
 	display_message_default "Install softwares from Pacman manually"
 
-	tools_create_path_directory $HOME/compilation/pacman/
-	cd $HOME/compilation/pacman/
-
 	#Timeshift
-	tools_download_file https://mirror.clarkson.edu/manjaro/testing/community/x86_64/timeshift-21.09.1-3-x86_64.pkg.tar.zst
-	pacman -U $HOME/compilation/timeshift-21.09.1-3-x86_64.pkg.tar.zst
+	tools_download_file https://aur.andontie.net/x86_64/timeshift-21.09.1-3-x86_64.pkg.tar.zst "$HOME/"
+	pacman -U $HOME/timeshift-21.09.1-3-x86_64.pkg.tar.zst
 
 	#Libinput
-	tools_download_file https://mirror.clarkson.edu/manjaro/testing/community/x86_64/libinput-gestures-2.69-1-any.pkg.tar.zst
-	pacman -U $HOME/compilation/libinput-gestures-2.69-1-any.pkg.tar.zst
+	#tools_download_file https://mirror.clarkson.edu/manjaro/testing/community/x86_64/libinput-gestures-2.69-1-any.pkg.tar.zst "$HOME/"
+	#pacman -U $HOME/compilation/libinput-gestures-2.69-1-any.pkg.tar.zst
 	
 	#Gestures
-	tools_download_file https://mirror.clarkson.edu/manjaro/stable/community/x86_64/gestures-0.2.5-1-any.pkg.tar.zst
-	pacman -U $HOME/compilation/gestures-0.2.5-1-any.pkg.tar.zst
-
-	cd -
+	#tools_download_file https://mirror.clarkson.edu/manjaro/stable/community/x86_64/gestures-0.2.5-1-any.pkg.tar.zst "$HOME/"
+	#pacman -U $HOME/compilation/gestures-0.2.5-1-any.pkg.tar.zst
 
 	display_message_success "Softwares from Pacman manually have been installed"
 }
@@ -2560,22 +2556,22 @@ install_softwares_from_archlinux_pacman_useful(){
 	display_message_default "Install Archlinux useful softwares"
 
 	tools_package_manager_archlinux_pacman_software_install \
-		dolphin \
-		gthumb \
-		lolcat \
-		neofetch \
-		spectacle
+		lolcat
 
         #archlinux-wallpaper \
 		#cmatrix \
+		#dolphin \
 		#firefox \
 		#go \
+		#gthumb \
 		#kdenlive \
 		#nautilus \
+		#neofetch \
 		#nmap \
 		#obs-studio \
 		#okular \
 		#simplescreenrecorder \
+		#spectacle \
 		#vlc
 	
 	display_message_success "ArchLinux userful softwares have been installed"
@@ -2590,17 +2586,16 @@ install_softwares_from_archlinux_pacman_utilities(){
 		firewalld \
 		gvfs \
 		gvfs-smb \
-		hplip \
 		inetutils \
 		ipset \
 		nfs-utils \
-		nss-mdns \
-		sof-firmware
-
+		nss-mdns
+		
 		#gufw #Firewall
+		#sof-firmware
     
-    tools_system_daemon_systemd_enable_later firewalld
     tools_system_daemon_systemd_enable_later avahi-daemon
+    tools_system_daemon_systemd_enable_later firewalld
 
 	display_message_success "ArchLinux utilities softwares have been installed"
 }
@@ -2825,14 +2820,11 @@ install_softwares_from_ubuntu_apt_wine(){
 
 #label_operating_system
 install_driver_audio(){
-	tools_package_manager_archlinux_pacman_software_install \
-        alsa-utils \
-        pavucontrol
-
 	while true; do
 		read -p "Inform what you want: [pipewire/pulseaudio/none] " QUESTION_SWAP
 
 		case $QUESTION_SWAP in
+			"alsa" display_message_empty ;;
 			"pipewire")
                 tools_package_manager_archlinux_pacman_software_install \
                     pipewire \
@@ -2843,6 +2835,10 @@ install_driver_audio(){
                 break
 				;;
 			"pulseaudio")
+				tools_package_manager_archlinux_pacman_software_install \
+					alsa-utils \
+					pavucontrol
+
             	tools_package_manager_archlinux_pacman_software_install \
                     pulseaudio
 
@@ -2868,6 +2864,9 @@ install_driver_printer(){
 	tools_package_manager_archlinux_pacman_software_install \
         cups
 
+	#tools_package_manager_archlinux_pacman_software_install \
+		#hplip \
+
 	tools_system_daemon_systemd_enable_now cups.service
 }
 
@@ -2891,9 +2890,9 @@ install_driver_graphic_video(){
         #Select the option according to your graphic video manufacturer.
         lspci | grep -e VGA -e 3D
 
-		read -p "Inform what you want: [amd/intel/nvidia/none] " QUESTION_SWAP
+		read -p "Inform what you want: [amd | intel | nvidia | none] " QUESTION_GRAPHIC_VIDEO
 
-		case $QUESTION_SWAP in
+		case $QUESTION_GRAPHIC_VIDEO in
 			"amd")
 				tools_package_manager_archlinux_pacman_software_install \
                     xf86-video-amdgpu
@@ -2912,6 +2911,38 @@ install_driver_graphic_video(){
                     nvidia-utils \
                     nvidia-settings
 
+				break
+				;;
+			"none") break ;;
+			*) echo "Please answer question." ;;
+		esac
+	done
+}
+
+install_display_server(){
+	display_message_default "Install display server"
+
+	while true; do
+		read -p "Inform what you want: [wayland | xorg | none] " QUESTION_DESKTOP_ENVIRONMENT
+
+		case $QUESTION_DESKTOP_ENVIRONMENT in
+			"wayland")
+				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				
+				tools_package_manager_archlinux_pacman_software_install \
+					wayland
+				
+				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				break
+				;;
+			"xorg")
+				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				
+				tools_package_manager_archlinux_pacman_software_install \
+					xorg
+					#xorg-server
+				
+				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
 				break
 				;;
 			"none") break ;;
@@ -2956,12 +2987,12 @@ install_desktop_enviroment_main(){
 
 #label_operating_system
 install_desktop_enviroment_deepin(){
-    tools_package_manager_archlinux_pacman_software_install \
-		xorg \
+    install_display_server
+	
+	tools_package_manager_archlinux_pacman_software_install \
 		deepin \
 		deepin-extra \
 		lightdm
-		#xorg-server
 
 	echo "greeter-session=lightdm-deepin-greeter" >> /etc/lightdm/lightdm.conf
 	#echo "display-setup-script=xrandr --output virtual-1 --mode 1920x1080" >> /etc/lightdm/lightdm.conf
@@ -2973,8 +3004,9 @@ install_desktop_enviroment_deepin(){
 
 #label_operating_system
 install_desktop_enviroment_gnome(){
+	install_display_server
+
 	tools_package_manager_archlinux_pacman_software_install \
-        xorg \
         gdm \
         gnome \
         gnome-extra \
@@ -3026,8 +3058,16 @@ install_softwares_from_ubuntu_apt_graphical_interface_i3(){
 
 #label_operating_system
 install_desktop_enviroment_kde(){
+	install_display_server
+
+	case $QUESTION_DESKTOP_ENVIRONMENT in
+		"wayland")
+			tools_package_manager_archlinux_pacman_software_install \
+				plasma-wayland-session
+			;;
+	esac
+
 	tools_package_manager_archlinux_pacman_software_install \
-        xorg \
         sddm \
         plasma \
         materia-kde
@@ -3040,8 +3080,9 @@ install_desktop_enviroment_kde(){
 
 #label_operating_system
 install_desktop_enviroment_xfce(){
+	install_display_server
+
 	tools_package_manager_archlinux_pacman_software_install \
-        xorg \
         lightdm \
         lightdm-gtk-greeter \
         lightdm-gtk-greeter-settings \
@@ -3396,18 +3437,7 @@ operating_system_archlinux_database_software_reflector(){
 	timedatectl set-ntp true
 	hwclock --systohc
 
-	while true; do
-		read -p "Inform the name of your country: [Brazil | bash | zsh | skip] " QUESTION_TERMINAL_HISTORY
-
-		case $QUESTION_TERMINAL_HISTORY in
-			"Brazil") break ;;
-			#"zsh") break ;;
-			"skip") QUESTION_TERMINAL_HISTORY="Brazil" ;;
-			*) echo "Please answer file or partition." ;;
-		esac
-	done
-
-	reflector -c $QUESTION_TERMINAL_HISTORY -a 12 --sort rate --save /etc/pacman.d/mirrorlist
+	reflector -c Brazil -a 12 --sort rate --save /etc/pacman.d/mirrorlist
 	pacman -Sy
 
 	firewall-cmd --add-port=1025-65535/tcp --permanent
@@ -3509,15 +3539,13 @@ operating_system_archlinux_installing_bootloader(){
 
 	#Enable Reflector
     tools_system_daemon_systemd_enable_later reflector.timer
-    tools_system_daemon_systemd_enable_later fstrim.timer #ERROR
+    #tools_system_daemon_systemd_enable_later fstrim.timer #ERROR
 
 	#Configuring GRUB by commenting the line: MODULES=()
-	tools_string_replace_text \
-		"/etc/mkinitcpio.conf" \
-		"MODULES=()" \
-		"MODULES=(btrfs)"
+	#tools_string_replace_text "/etc/mkinitcpio.conf" "^MODULES=()" "#MODULES=()"
+	tools_string_replace_text "/etc/mkinitcpio.conf" "^MODULES=()" "MODULES=(btrfs)"
 
-	#tools_edit_file $FILENAME #Add text: MODULES=(btrfs)
+	tools_edit_file $FILENAME #Add text: MODULES=(btrfs)
 	mkinitcpio -p linux
 
 	#Applying GRUB
@@ -3823,35 +3851,43 @@ calling_archlinux_part_02(){
     tools_question_username
 
     #Working
-    tools_partiting_swap
+    #tools_partiting_swap
     operating_system_archlinux_changing_timezone
     changing_language
     operating_system_archlinux_changing_hostname
     operating_system_archlinux_enabling_support_32_bits
     tools_package_manager_archlinux_pacman_repository_syncronize
     operating_system_archlinux_changing_password_root
-    operating_system_archlinux_creating_new_user
-    operating_system_archlinux_editing_sudo_properties
     install_support_ssh
     operating_system_archlinux_installing_bootloader #Including base-devel
     
     #Testing
-	install_softwares_from_archlinux_pacman_manually
     operating_system_archlinux_database_software_reflector
+	install_softwares_from_archlinux_pacman_manually
     install_softwares_from_archlinux_pacman_essential
 	install_softwares_from_archlinux_pacman_laptop_battery
 	install_softwares_from_archlinux_pacman_utilities
-    tools_package_manager_any_flatpak_software_setup
-	install_shell_profile
-	install_shell_zsh
+    install_desktop_utils
     
     install_softwares_from_any_binary_lf
+	tools_package_manager_any_asdf_software_setup
+	tools_package_manager_any_vim_vundle_software_setup
+
+	install_shell_profile
+	install_shell_zsh
+
+    operating_system_archlinux_creating_new_user
+    operating_system_archlinux_editing_sudo_properties
+
     install_platform_virtual_machine_main
     install_platform_container_main
     install_container_distrobox_from_curl
-    tools_package_manager_any_asdf_software_setup
 
-    install_desktop_utils
+	#silverarch_release_set_logo
+    silverarch_release_set_name
+
+	tools_backup_create "SilverArch installation setup command line interface (CLI) has been completed!"
+
     install_desktop_enviroment_main
     install_driver_audio
     install_driver_bluetooth
@@ -3859,13 +3895,9 @@ calling_archlinux_part_02(){
     install_driver_graphic_video
     install_network_interface
 
-    #silverarch_release_set_logo
-    silverarch_release_set_name
+    tools_package_manager_any_flatpak_software_setup
 
-    tools_package_manager_any_vim_vundle_software_setup
-	tools_package_manager_any_asdf_software_setup
-
-	tools_backup_create "SilverArch installation setup completed!"
+	tools_backup_create "SilverArch installation setup graphical user interface (GUI) has been completed!"
     
     display_message_success "Script has been finished!"
     display_message_warning "Verify if everything is okay and then go back to the livecd mode by typing:\n\t> $ exit\n\t> $ umount -a\n\t> $ systemctl reboot"
@@ -3874,7 +3906,7 @@ calling_archlinux_part_02(){
 calling_archlinux_part_03(){
 	tools_package_manager_archlinux_aur_software_setup
 	tools_package_manager_archlinux_aur_repository_syncronize
-	tools_package_manager_archlinux_pacman_repository_syncronize
+	#tools_package_manager_archlinux_pacman_repository_syncronize
 	#tools_package_manager_any_python_pip_repository_add
 	#tools_package_manager_any_snap_software_setup
 	#install_platform_debtap
