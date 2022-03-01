@@ -2821,10 +2821,13 @@ install_softwares_from_ubuntu_apt_wine(){
 #label_operating_system
 install_driver_audio(){
 	while true; do
-		read -p "Inform what you want: [pipewire/pulseaudio/none] " QUESTION_SWAP
+		read -p "Inform what you want: [alsa | pipewire | pulseaudio | none] " QUESTION_DRIVER_AUDIO
 
-		case $QUESTION_SWAP in
-			"alsa" display_message_empty ;;
+		case $QUESTION_DRIVER_AUDIO in
+			"alsa")
+				display_message_empty
+				break
+				;;
 			"pipewire")
                 tools_package_manager_archlinux_pacman_software_install \
                     pipewire \
@@ -2923,26 +2926,26 @@ install_display_server(){
 	display_message_default "Install display server"
 
 	while true; do
-		read -p "Inform what you want: [wayland | xorg | none] " QUESTION_DESKTOP_ENVIRONMENT
+		read -p "Inform what you want: [wayland | xorg | none] " QUESTION_DISPLAY_SERVER
 
-		case $QUESTION_DESKTOP_ENVIRONMENT in
+		case $QUESTION_DISPLAY_SERVER in
 			"wayland")
-				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				display_message_default "$QUESTION_DISPLAY_SERVER display server has been installed"
 				
 				tools_package_manager_archlinux_pacman_software_install \
 					wayland
 				
-				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				display_message_default "$QUESTION_DISPLAY_SERVER display server has been installed"
 				break
 				;;
 			"xorg")
-				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				display_message_default "$QUESTION_DISPLAY_SERVER display server has been installed"
 				
 				tools_package_manager_archlinux_pacman_software_install \
 					xorg
 					#xorg-server
 				
-				display_message_default "$QUESTION_DESKTOP_ENVIRONMENT display server has been installed"
+				display_message_default "$QUESTION_DISPLAY_SERVER display server has been installed"
 				break
 				;;
 			"none") break ;;
