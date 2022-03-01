@@ -3287,11 +3287,11 @@ operating_system_archlinux_mount_chroot(){
 	display_message_default "Log in as root on the ArchLinux which is going to be installed (not the installer iso one)"
 	
 	#Run a single command and exit
-	#arch-chroot /mnt/root cp $0
-	#arch-chroot /mnt/usr/bin/ cp $0
+	arch-chroot /mnt/root cp $0
+	arch-chroot /mnt/usr/bin/ cp $0
 
 	#Enter a chroot
-	#arch-chroot /mnt/
+	arch-chroot /mnt/
 }
 
 operating_system_archlinux_creating_fstab(){
