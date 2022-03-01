@@ -2220,6 +2220,12 @@ install_platform_wine(){
 	display_message_success "WINE platform has been installed"
 }
 
+#label_must_be_tested
+install_shell_profile(){
+	tools_download_file "$SILVERARCH_SCRIPT_LINK_PROFILE" "/etc/skel"
+	mv /etc/skel/profile.sh /etc/skel/.profile
+}
+
 #label_must_be_choosen
 install_shell_bash(){
     display_message_warning "Installing Bash shell..."
@@ -3833,6 +3839,7 @@ calling_archlinux_part_02(){
 	install_softwares_from_archlinux_pacman_laptop_battery
 	install_softwares_from_archlinux_pacman_utilities
     tools_package_manager_any_flatpak_software_setup
+	install_shell_profile
 	install_shell_zsh
     
     install_softwares_from_any_binary_lf
