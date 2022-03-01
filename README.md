@@ -136,7 +136,7 @@ FIREJAIL, FLATPAKS
 
 SilverArch brings [DistroBox](https://github.com/89luca89/distrobox) and [Podman](https://podman.io/) system tools by default. These applications working together make the user to be able to use others Linux distros such as [Debian](https://www.debian.org/), [Fedora](https://start.fedoraproject.org/), [OpenSUSE](https://www.opensuse.org/) and [Ubuntu](https://ubuntu.com/) from a containerized method whose creates the hole file system tree structure according to the distro needs. It has included the package managers such as `APT`, `DNF` and `Zipper` while sharing the Linux kernel and the `$HOME/` path directory between the container and the host operating system.
 
-Once you have installed an application inside a containerazed distro, this software can be run with graphical interface and audio sound with any additional setup. It is also possible to integrated the application with the host operating system exporting the desktop file to the application menu.
+Once you have installed an application inside a containerized distro, this software can be run with graphical interface and audio sound with any additional setup. It is also possible to integrated the application with the host operating system exporting the desktop file to the application menu.
 
 ### Clear workspace concept
 
@@ -154,7 +154,7 @@ SilverArch auto creates backups of the hole operating system when installing or 
 
 In case the user restore a wrong snapshot it is possible to come back to the original version. Restoring snapshots does not delete them unless the user does this procedure manually.
 	
-SilverArch enables the user to check the files from the previous snapshots versions without even to restore them (including copying and editing). Once SilverArch uses Times/hift system tool on background for managing the system backup and BTRFS is set to be the default file system, backing up or restoring the hole operating system is almost instantaneity. Sounds like magic but it is real!
+SilverArch enables the user to check the files from the previous snapshots versions without even to restore them (including copying and editing). Once SilverArch uses Timeshift system tool on background for managing the system backup and BTRFS is set to be the default file system, backing up or restoring the hole operating system is almost instantaneity. Sounds like magic but it is real!
 	
 Backup is never too much but it hurts a lot of time. How about backing up the full operating system without even needing to remember about this?
 
@@ -191,3 +191,21 @@ During the SilverArch installation setup it is possible to install possible to i
 SilverArch does not collect or intercept your data. Any kind of telemetry are installed by any software which is installed by default. By the way if the user wants to install these kind of softwares there is no forbidden for this procedure. We understand the users have their own reasons about to do what they are doing and also known they can be penalty responsibility by their actions. SilverArch has been made to work, not to judge.
 
 Unless the user really wants to do this, SilverArch is an unbreakable operating system. SilverArch respects the users choices about changing the operating system settings about their tastes. In this scenery SilverArch cannot promise the unbreakable concept is going to be fire proofed.
+
+## Installation setup
+
+- ???
+    ```bash
+    #Download SilverArch script file
+    cd $HOME/
+    #cd /usr/bin/
+    curl -L -O https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/main.sh
+    mv $HOME/main.sh $HOME/silverarch
+    cd -
+
+    #Give executable permission
+    chmod +x $HOME/main.sh
+
+    #Run the SilverArch script file
+    $HOME/main.sh --part-01
+    ```
