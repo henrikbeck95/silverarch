@@ -86,7 +86,7 @@ case $NAME in
     *) MESSAGE_OPERATING_SYSTEM="This script file does not support it. Maybe this is not the right script for you :(" ;;
 esac
 
-MESSAGE_HELP="
+MESSAGE_HELP_GENERICS="
 \t\t\t\t\tLinux installation setup
 \t\t\t\t\t----------------------------\n
 [Credits]
@@ -106,6 +106,7 @@ This script supports Alpine, ArchLinux and Fedora operating systems.
 $TERMINAL_COLOR_ORANGE Basic script file options $TERMINAL_COLOR_END
 -h\t--help\t-?\t\t\tDisplay this help message
 -e\t--edit\t\t\t\tEdit this script file
+-b\t--backup\t\t\t\tSilverArch backup
 
 $TERMINAL_COLOR_BLUE Alpine installation setup $TERMINAL_COLOR_END
 -al-p01\t--alpine-part-01\t\tInstall ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
@@ -125,10 +126,32 @@ $TERMINAL_COLOR_RED_LIGHT Others installation setup $TERMINAL_COLOR_END
 -t\t--testing\t\t\tTesting selected functions for debugging this script file
 "
 
+MESSAGE_HELP_BACKUP="
+[Description]
+SilverArch uses $BACKUP_TOOL as default backup tool on background to manage all system snapshots.
+
+[Parameters]
+create\t\t\tCreate a new system snapshot to preverse the current state
+delete\t\t\tRemove a system snapshot
+help\t\t\tDisplay this help message
+list\t\t\tList all system snapshots and the relational dates
+restore\t\t\tRestore a system snapshot and come back in time
+
+[Examples]
+$AUX0 $AUX1 create '???'
+$AUX0 $AUX1 delete '???'
+$AUX0 $AUX1 help
+$AUX0 $AUX1 list
+$AUX0 $AUX1 restore '???'
+"
+
 MESSAGE_RESTART="Must restart current session for apply the new settings"
 
-MESSAGE_ERROR="Invalid option for $0!\n$MESSAGE_HELP"
+MESSAGE_ERROR_GENERICS="Invalid option for $0!\n$MESSAGE_HELP_GENERICS"
 
+MESSAGE_ERROR_BACKUP="Invalid option for $AUX2 $AUX3!\n$MESSAGE_HELP_BACKUP"
+
+AUX0=$0
 AUX1=$1
 AUX2=$2
 AUX3=$3
@@ -166,6 +189,7 @@ display_message_warning(){
 #Functions - Backup
 #############################
 
+#label_must_be_created_
 tools_backup_snaptshot_create(){
 	tools_check_if_user_has_root_previledges
 
@@ -183,28 +207,25 @@ tools_backup_snaptshot_create(){
 	esac
 }
 
-tools_backup_snapshot_list(){
+#label_must_be_created_
+tools_backup_snaptshot_delete(){
 	tools_check_if_user_has_root_previledges
-	
+
+	#display_message_default "Creating $BACKUP_TOOL $1 backup"
+	#display_message_success "$BACKUP_TOOL backup $1 has been created"
+
 	case $BACKUP_TOOL in
 		"btrfk") display_message_empty ;;
-		"snapper") snapper list ;;
-		"timeshift") timeshift --list ;;
+		"snapper") : ;;
+		"timeshift")
+			timeshift --btrfs #Change Timeshift engine
+			timeshift --create --comments "$1" --tags D
+			;;
 		*) display_message_empty ;;
 	esac
 }
 
-tools_backup_snapshot_restore(){
-	tools_check_if_user_has_root_previledges
-	
-	case $BACKUP_TOOL in
-		"btrfk") display_message_empty ;;
-		"snapper") snnapper rollback $1 ;; #19
-		"timeshift") timeshift --restore --snapshot "$1" ;; #timeshift --restore --snapshot '2021-07-09_00-37-36'
-		*) display_message_empty ;;
-	esac
-}
-
+#label_must_be_created_
 tools_backup_message_help(){
 	tools_check_if_user_has_root_previledges
 	
@@ -216,6 +237,31 @@ tools_backup_message_help(){
 	esac
 }
 
+#label_must_be_created_
+tools_backup_snapshot_list(){
+	tools_check_if_user_has_root_previledges
+	
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") snapper list ;;
+		"timeshift") timeshift --list ;;
+		*) display_message_empty ;;
+	esac
+}
+
+#label_must_be_created_
+tools_backup_snapshot_restore(){
+	tools_check_if_user_has_root_previledges
+	
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") snnapper rollback $1 ;; #19
+		"timeshift") timeshift --restore --snapshot "$1" ;; #timeshift --restore --snapshot '2021-07-09_00-37-36'
+		*) display_message_empty ;;
+	esac
+}
+
+#label_must_be_created_
 tools_backup_setup(){
 	case $BACKUP_TOOL in
 		"btrfk") display_message_empty ;;
@@ -4051,7 +4097,13 @@ calling_archlinux_part_02(){
     
 	tools_backup_snaptshot_create "SilverArch installation setup command line interface (CLI) has been completed!"
 
+	#
+    #install_driver_graphic_video
+	#install_display_server
+    #install_desktop_enviroment_main
 	#install_desktop_utils
+    	#install_driver_audio #Default
+
     #install_softwares_from_archlinux_pacman_essential
 	#install_softwares_from_archlinux_pacman_laptop_battery
 	#install_softwares_from_archlinux_pacman_utilities
@@ -4063,12 +4115,8 @@ calling_archlinux_part_02(){
     #install_platform_container_main
     #install_container_distrobox_from_curl
 
-	#install_display_server
-    #install_desktop_enviroment_main
-    #install_driver_audio
     #install_driver_bluetooth
     #install_driver_printer
-    #install_driver_graphic_video
     #install_network_interface
 
     #tools_package_manager_any_flatpak_software_setup
@@ -4182,6 +4230,17 @@ calling_update(){
 	tools_give_executable_permission /mnt/usr/bin/silverarch
 }
 
+calling_backup(){
+    case $AUX2 in
+        "create") tools_backup_snaptshot_create $AUX3 ;;
+        "delete") tools_backup_snaptshot_delete $AUX3 ;;
+        "" | "help") tools_backup_message_help ;;
+        "list") tools_backup_snapshot_list ;;
+        "restore") tools_backup_snapshot_restore $AUX3 ;;
+        *) display "$MESSAGE_ERROR_BACKUP" ;;
+    esac
+}
+
 #############################
 #Calling the functions
 #############################
@@ -4189,8 +4248,9 @@ calling_update(){
 clear
 
 case $AUX1 in
-	"" | "-h" | "--help" | "-?") echo -e "$MESSAGE_HELP" ;;
+	"" | "-h" | "--help" | "-?") echo -e "$MESSAGE_HELP_GENERICS" ;;
 	"-e" | "--edit") $EDITOR $0 ;;
+	"-b" | "--backup") calling_backup ;;
     "-al-p01" | "--alpine-part-01") calling_alpine ;;
     "-al-p02" | "--alpine-part-02") calling_alpine_part_02 ;;
     "-ar-p01" | "--archlinux-part-01") calling_archlinux_part_01 ;;
@@ -4201,5 +4261,5 @@ case $AUX1 in
     "-s" | "--system-appearance") calling_system_appearance ;;
     "-t" | "--testing") calling_testing ;;
 	"-u" | "--update") calling_update ;;
-	*) echo -e "$MESSAGE_ERROR" ;;
+	*) echo -e "$MESSAGE_ERROR_GENERICS" ;;
 esac
