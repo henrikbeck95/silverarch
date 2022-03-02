@@ -32,6 +32,7 @@ SILVERARCH_SCRIPT_LINK_PROFILE="https://raw.githubusercontent.com/henrikbeck95/s
 SILVERARCH_SCRIPT_PATH="$PATH_SCRIPT/"
 #SILVERARCH_SCRIPT_PATH="$HOME/"
 #SILVERARCH_SCRIPT_PATH="/root/"
+SILVERARCH_WALLPAPER_LINK="https://raw.githubusercontent.com/henrikbeck95/silverarch/development/assets/silverarch_wallpaper.png"
 
 TERMINAL_COLOR_BLACK="\033[0;30m"
 TERMINAL_COLOR_BLUE="\033[0;34m"
@@ -65,6 +66,10 @@ TERMINAL_TEXT_END="\e[0m"
 TERMINAL_TEXT_BACKGROUND_WHITE_CYAN="\e[48:5:42m"
 TERMINAL_TEXT_BACKGROUND_WHITE_ORANGE="\e[48:2::240:143:104m"
 TERMINAL_TEXT_BACKGROUND_END="\e[49m"
+
+#BACKUP_TOOL="btrfk"
+BACKUP_TOOL="snapper"
+#BACKUP_TOOL="timeshift"
 
 #CONTAINER_MANAGER="docker"
 CONTAINER_MANAGER="podman"
@@ -158,31 +163,74 @@ display_message_warning(){
 }
 
 #############################
-#Functions - Tools
+#Functions - Backup
 #############################
 
-tools_backup_create(){
+tools_backup_snaptshot_create(){
 	tools_check_if_user_has_root_previledges
 
-	display_message_default "Creating Timeshift $1 backup"
+	#display_message_default "Creating $BACKUP_TOOL $1 backup"
+	#display_message_success "$BACKUP_TOOL backup $1 has been created"
 
-	#Get Timeshift help
-	#timeshift --help
-	
-	#Change Timeshift engine
-	timeshift --btrfs
-
-	#Linux all snapshots
-	#timeshift --list
-
-	#Create a snapshot
-	timeshift --create --comments "$1" --tags D
-
-	#Restore a Timeshift snapshot
-	#timeshift --restore --snapshot '2021-07-09_00-37-36'
-
-	display_message_success "Timeshift backup $1 has been created"
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") : ;;
+		"timeshift")
+			timeshift --btrfs #Change Timeshift engine
+			timeshift --create --comments "$1" --tags D
+			;;
+		*) display_message_empty ;;
+	esac
 }
+
+tools_backup_snapshot_list(){
+	tools_check_if_user_has_root_previledges
+	
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") snapper list ;;
+		"timeshift") timeshift --list ;;
+		*) display_message_empty ;;
+	esac
+}
+
+tools_backup_snapshot_restore(){
+	tools_check_if_user_has_root_previledges
+	
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") snnapper rollback $1 ;; #19
+		"timeshift") timeshift --restore --snapshot "$1" ;; #timeshift --restore --snapshot '2021-07-09_00-37-36'
+		*) display_message_empty ;;
+	esac
+}
+
+tools_backup_message_help(){
+	tools_check_if_user_has_root_previledges
+	
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") display_message_empty ;;
+		"timeshift") timeshift --help ;;
+		*) display_message_empty ;;
+	esac
+}
+
+tools_backup_setup(){
+	case $BACKUP_TOOL in
+		"btrfk") display_message_empty ;;
+		"snapper") 
+			tools_package_manager_archlinux_pacman_software_install \
+				snapper
+			;;
+		"timeshift") display_message_empty ;;
+		*) display_message_empty ;;
+	esac
+}
+
+#############################
+#Functions - Tools
+#############################
 
 tools_browser_open_url(){
 	display_message_default "Opening $@ from $BROWSER browser software"
@@ -296,6 +344,8 @@ tools_download_file(){
 		2) 
 			display_message_warning "Downloading $1 file to $2"
 
+			mkdir -p $2
+
 			cd $2
 			pwd
 			curl -L -O $1
@@ -368,6 +418,15 @@ tools_extract_file_tar(){
 	tar -zxvf $@ || tar -xzf $@ || tar -xf $@
 	
 	display_message_success "File(s) $@ has/have been extracted"
+}
+
+tools_extract_file_zip(){
+	local FILE_ORIGIN="$1"
+	local FILE_DESTINY="$2"
+
+	mkdir -p $FILE_DESTINY
+
+	unzip $FILE_ORIGIN -d $FILE_DESTINY
 }
 
 tools_give_executable_permission(){
@@ -728,29 +787,31 @@ tools_package_manager_any_asdf_software_list(){
 }
 
 tools_package_manager_any_asdf_software_setup(){
-	display_message_default "Install ASDF $@ setup"
+	display_message_default "Install ASDF setup"
 	
+	local FILE_PATH="$1" #/etc/skel/.asdf or $HOME/.asdf
+
 	#Install ASDF
-	git clone https://github.com/asdf-vm/asdf.git /etc/skel/.asdf --branch v0.9.0
-	#git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf --branch v0.9.0
+	git clone https://github.com/asdf-vm/asdf.git $FILE_PATH --branch v0.9.0
 	
 	#BASH
-	#tools_string_write_exclusive_line_on_a_file "source \$HOME/.asdf/asdf.sh" "$HOME/.bashrc"
-
-	#tools_string_write_exclusive_line_on_a_file "source \$HOME/.asdf/completions/asdf.bash" "$HOME/.bashrc"
+	#tools_string_write_exclusive_line_on_a_file "source $FILE_PATH/asdf.sh" "$HOME/.bashrc"
+	#tools_string_write_exclusive_line_on_a_file "source $FILE_PATH/completions/asdf.bash" "$HOME/.bashrc"
 	
 	#ZSH
-	#tools_string_write_exclusive_line_on_a_file "source \$HOME/.asdf/asdf.sh" "$HOME/.zshrc"
-	#tools_string_write_exclusive_line_on_a_file "source \$HOME/.asdf/completions/asdf.bash" "$HOME/.zshrc"
-	
-	display_message_default "ASDF $@ setup has been installed"
+	#tools_string_write_exclusive_line_on_a_file "source $FILE_PATH/asdf.sh" "$HOME/.zshrc"
+	#tools_string_write_exclusive_line_on_a_file "source $FILE_PATH/completions/asdf.bash" "$HOME/.zshrc"
+
+	#Uninstall ASDF
+	#rm -rf $FILE_PATH/ $HOME/.tool-versions
+
+	display_message_default "ASDF setup has been installed"
 }
 
 tools_package_manager_any_asdf_software_uninstall(){
 	display_message_default "Uninstall ASDF $@ software"
 
-	#asdf uninstall python 3.7.4
-	asdf uninstall $@
+	asdf uninstall $@ #python 3.7.4
 	
 	display_message_default "ASDF $@ software has been unistalled"
 }
@@ -816,9 +877,7 @@ tools_package_manager_any_flatpak_software_setup(){
         *) display_message_error "" ;;
     esac
 
-	display_message_warning "$MESSAGE_RESTART"
-
-	display_message_default "Flatpak $@ setup has been installed"
+	display_message_warning "Flatpak $@ setup has been installed! $MESSAGE_RESTART"
 }
 
 tools_package_manager_any_flatpak_software_uninstall(){
@@ -1278,14 +1337,25 @@ tools_package_manager_any_snap_software_uninstall(){
 	display_message_default "Snap $@ software(s) has/have been uninstalled"
 }
 
+tools_package_manager_any_tmux_tpm_software_setup(){
+	display_message_default "Install Tmux Package Manager setup"
+	
+    local FILE_PATH="$1"
+    
+	git clone https://github.com/tmux-plugins/tpm $FILE_PATH/.tmux/plugins/tpm
+	
+	display_message_default "Tmux Package Manager setup has been installed"
+}
+
 tools_package_manager_any_vim_vundle_software_setup(){
 	display_message_default "Install Vundle-Vim $@ setup"
+
+	local FILE_PATH="$1"
 	
-    tools_download_file "https://raw.githubusercontent.com/henrikbeck95/dotfiles/development/compiled/.vimrc" "/etc/skel/"
+    tools_download_file "https://raw.githubusercontent.com/henrikbeck95/dotfiles/development/compiled/.vimrc" "$FILE_PATH/"
 
     #Install Vundle-Vim
-    #git clone https://github.com/VundleVim/Vundle.vim.git $HOME/.vim/bundle/Vundle.vim
-    git clone https://github.com/VundleVim/Vundle.vim.git /etc/skel/.vim/bundle/Vundle.vim
+    git clone https://github.com/VundleVim/Vundle.vim.git $FILE_PATH/.vim/bundle/Vundle.vim
     
     #Install Vim plugins
     vim +PluginInstall +qall
@@ -1765,12 +1835,101 @@ silverarch_release_set_logo(){
 	display_message_empty
 }
 
-silverarch_release_set_name(){
-    tools_string_replace_text \
-        "/etc/os-release" \
-        "PRETTY_NAME=\"Arch Linux\"" \
-        "PRETTY_NAME=\"SilverArch\""
+files_etc_os_release(){
+    tools_string_replace_text "/etc/os-release" "PRETTY_NAME=\"Arch Linux\"" "PRETTY_NAME=\"SilverArch\""
 }
+
+files_etc_skel_asdf(){
+    tools_package_manager_any_asdf_software_setup "/etc/skel/.asdf"
+}
+
+files_etc_skel_shell(){
+    #$HOME/.profile file
+    install_shell_profile "/etc/skel"
+
+    #$HOME/.bash_logout file
+    tools_string_write_exclusive_line_on_a_file '
+    #~/.bash_logout
+    ' > /etc/skel/.bash_logout
+
+    #$HOME/.bash_profile file
+    tools_string_write_exclusive_line_on_a_file '
+    #Load the $HOME/.bashrc file
+    if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+    fi
+    ' > /etc/skel/.bash_profile
+
+    #$HOME/.bashrc file
+    tools_string_write_exclusive_line_on_a_file '
+    #Load global settings
+    if [[ -f $HOME/.profile ]]; then
+        source $HOME/.profile
+    fi
+    ' > /etc/skel/.bashrc
+
+    #$HOME/.zshrc file
+    tools_string_write_exclusive_line_on_a_file '
+    #Load global settings
+    if [[ -f $HOME/.profile ]]; then
+        source $HOME/.profile
+    fi
+    ' >> /etc/skel/.zshrc
+}
+
+files_etc_skel_tmux(){
+    tools_download_file "https://raw.githubusercontent.com/henrikbeck95/dotfiles/development/current/tmux.conf" "/etc/skel"
+    tools_package_manager_any_tmux_tpm_software_setup "/etc/skel"
+}
+
+files_etc_skel_vim(){
+    #tools_download_file "https://raw.githubusercontent.com/henrikbeck95/dotfiles/development/compiled/.vimrc" "/etc/skel"
+    tools_download_file "https://raw.githubusercontent.com/henrikbeck95/dotfiles/development/current/vimrc" "/etc/skel"
+	mv /etc/skel/vimrc /etc/skel/.vimrc
+	#vim +PluginInstall +qall
+    tools_package_manager_any_vim_vundle_software_setup "/etc/skel"
+}
+
+files_etc_skel_xresources(){
+    tools_download_file "https://raw.githubusercontent.com/henrikbeck95/dotfiles/development/current/Xresources" "/etc/skel"
+}
+
+#files_usr_bin_dynamic_wallpaper(){}
+
+files_usr_bin_silverarch(){
+	#Copy this script file to the arch-chroot
+	cp $0 /mnt/usr/bin/silverarch
+	tools_give_executable_permission /mnt/usr/bin/silverarch
+}
+
+files_usr_share_backgrounds_silverarch(){
+    tools_download_file "$SILVERARCH_WALLPAPER_LINK" "/usr/share/backgrounds/silverarch/"
+}
+
+files_usr_share_fonts(){
+	#Download the files
+	#tools_download_file https://github.com/tonsky/FiraCode/releases/download/5.2/Fira_Code_v5.2.zip "/tmp/the_fonts"
+	tools_download_file "https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/FiraCode.zip" "/tmp/the_fonts"
+	tools_download_file "https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/LiberationMono.zip" "/tmp/the_fonts"
+	tools_download_file "https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Hack.zip" "/tmp/the_fonts"
+	tools_download_file "https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Meslo.zip" "/tmp/the_fonts"
+
+	#Extract files
+	tools_extract_file_zip "/tmp/the_fonts/FiraCode.zip" "/usr/share/fonts/FiraCode"
+	tools_extract_file_zip "/tmp/the_fonts/LiberationMono.zip" "/usr/share/fonts/LiberationMono"
+	tools_extract_file_zip "/tmp/the_fonts/Hack.zip" "/usr/share/fonts/Hack"
+	tools_extract_file_zip "/tmp/the_fonts/Meslo.zip" "/usr/share/fonts/Meslo"
+
+	#Remove temporary folder
+	rf -fr /tmp/the_fonts/
+
+	#Update the fonts cache
+	tools_update_fonts_cache
+}
+
+#fedora-logo
+#ln silverarch-logo archlinux-logo
+#files_usr_share_silverarch_logo(){}
 
 #############################
 #Functions - Adding repositories
@@ -2219,8 +2378,10 @@ install_platform_wine(){
 
 #label_must_be_tested
 install_shell_profile(){
-	tools_download_file "$SILVERARCH_SCRIPT_LINK_PROFILE" "/etc/skel"
-	mv /etc/skel/profile.sh /etc/skel/.profile
+	local FILE_PATH="$1"
+	
+	tools_download_file "$SILVERARCH_SCRIPT_LINK_PROFILE" "$FILE_PATH"
+	mv $FILE_PATH/profile.sh $FILE_PATH/.profile
 }
 
 #label_must_be_choosen
@@ -2818,7 +2979,7 @@ install_softwares_from_ubuntu_apt_wine(){
 #Functions - LIMBO
 #######################################################################################
 
-#label_operating_system
+#label_must_be_fixed
 install_driver_audio(){
 	while true; do
 		read -p "Inform what you want: [alsa | pipewire | pulseaudio | none] " QUESTION_DRIVER_AUDIO
@@ -3334,10 +3495,6 @@ operating_system_archlinux_mount_chroot(){
 	#arch-chroot /mnt/root cp $0
 	#arch-chroot /mnt/usr/bin/ cp $0
 
-	#Copy this script file to the arch-chroot
-	cp $0 /mnt/usr/bin/silverarch
-	tools_give_executable_permission /mnt/usr/bin/silverarch
-
 	#Enter a chroot
 	arch-chroot /mnt/
 }
@@ -3523,12 +3680,13 @@ operating_system_archlinux_installing_bootloader(){
 
 	tools_package_manager_archlinux_pacman_software_install \
         grub \
+        grub-btrfs \
 		base-devel \
 		cron \
 		dialog \
 		dosfstools \
 		efibootmgr \
-		linux-lts-headers \
+		linux-headers \
 		mtools \
 		networkmanager \
 		network-manager-applet \
@@ -3536,6 +3694,8 @@ operating_system_archlinux_installing_bootloader(){
 		reflector \
 		wireless_tools \
 		wpa_supplicant
+		
+		#linux-lts-headers \
 
 	#Enable the NetworkManager 
 	tools_system_daemon_systemd_enable_now NetworkManager.service
@@ -3546,7 +3706,7 @@ operating_system_archlinux_installing_bootloader(){
 
 	#Configuring GRUB by commenting the line: MODULES=()
 	#tools_string_replace_text "/etc/mkinitcpio.conf" "^MODULES=()" "#MODULES=()"
-	tools_string_replace_text "/etc/mkinitcpio.conf" "^MODULES=()" "MODULES=(btrfs)"
+	#tools_string_replace_text "/etc/mkinitcpio.conf" "^MODULES=()" "MODULES=(btrfs)"
 
 	tools_edit_file $FILENAME #Add text: MODULES=(btrfs)
 	mkinitcpio -p linux
@@ -3584,8 +3744,11 @@ operating_system_archlinux_install_system_base(){
 		base \
 		btrfs-progs \
 		linux-firmware \
-		linux-lts \
+		linux \
+		snapper \
 		vim
+		
+		#linux-lts \
 
 	case $PROCESSOR in
 		"AuthenticAMD") pacstrap /mnt/ amd-ucode ;;
@@ -3640,9 +3803,14 @@ operating_system_archlinux_partiting_mounting(){
 	#Creating subvolumes for BTRFS
 	btrfs su cr /mnt/@/
 
+	btrfs su cr /mnt/@home/ #Testing
+	btrfs su cr /mnt/@var/ #Testing
+	btrfs su cr /mnt/@snapshots/ #Testing
+
 	#Mounting root subvolume
 	umount /mnt/
-	mount -o compress=lzo,subvol=@ $PARTITION_ROOT /mnt/
+	#mount -o compress=lzo,subvol=@ $PARTITION_ROOT /mnt/
+	mount -o noatime,compress=lzo,space_cache,subvol=@ $PARTITION_ROOT /mnt/
 	
 	#Listing all the partition table
 	lsblk
@@ -3663,8 +3831,16 @@ operating_system_archlinux_partiting_mounting(){
 			exit 0
 			;;
 		"uefi") 
-			mkdir -p /mnt/boot/efi/
-			mount $PARTITION_BOOT /mnt/boot/efi/
+			#mkdir -p /mnt/boot/efi/
+			mkdir -p /mnt/{boot,home,var,.snapshots}/
+			
+			#Tesitng
+			mount -o noatime,compress=lzo,space_cache,subvol=@home $PARTITION_ROOT /mnt/home/
+			mount -o noatime,compress=lzo,space_cache,subvol=@var $PARTITION_ROOT /mnt/var/
+			mount -o noatime,compress=lzo,space_cache,subvol=@snapshots $PARTITION_ROOT /mnt/.snapshots/
+			
+			#mount $PARTITION_BOOT /mnt/boot/efi/
+			mount $PARTITION_BOOT /mnt/boot/
 			;;
 		*)
 			display_message_error "The BIOS could not be identified!"
@@ -3693,17 +3869,6 @@ operating_system_fedora_version_upgrade(){
 #############################
 #Appearance
 #############################
-
-#label_must_be_created
-appearance_fonts(){
-	#
-	#sudo chown henrikbeck95:henrikbeck95 -R /home/henrikbeck95/.fonts/
-	
-	#Firacode font
-	#wget https://github.com/tonsky/FiraCode/releases/download/5.2/Fira_Code_v5.2.zip
-	
-	tools_update_fonts_cache
-}
 
 #label_must_be_improved
 #label_must_be_edited
@@ -3843,7 +4008,9 @@ calling_archlinux_part_01(){
     operating_system_archlinux_partiting_disk
     operating_system_archlinux_partiting_mounting
     operating_system_archlinux_install_system_base
+	#tools_backup_setup #Testing
     operating_system_archlinux_creating_fstab
+	files_usr_bin_silverarch
     operating_system_archlinux_mount_chroot
 
     display_message_warning "Script has been finished!"
@@ -3854,56 +4021,63 @@ calling_archlinux_part_02(){
     tools_question_username
 
     #Working
-    #tools_partiting_swap
+    tools_partiting_swap
     operating_system_archlinux_changing_timezone
     changing_language
     operating_system_archlinux_changing_hostname
-    operating_system_archlinux_enabling_support_32_bits
+    #operating_system_archlinux_enabling_support_32_bits
     tools_package_manager_archlinux_pacman_repository_syncronize
+    operating_system_archlinux_database_software_reflector
     operating_system_archlinux_changing_password_root
     install_support_ssh
     operating_system_archlinux_installing_bootloader #Including base-devel
     
-    #Testing
-    operating_system_archlinux_database_software_reflector
-	install_softwares_from_archlinux_pacman_manually
-    install_softwares_from_archlinux_pacman_essential
-	install_softwares_from_archlinux_pacman_laptop_battery
-	install_softwares_from_archlinux_pacman_utilities
-    install_desktop_utils
-    
-    install_softwares_from_any_binary_lf
-	tools_package_manager_any_asdf_software_setup
-	tools_package_manager_any_vim_vundle_software_setup
-
-	install_shell_profile
-	install_shell_zsh
-
-    operating_system_archlinux_creating_new_user
-    operating_system_archlinux_editing_sudo_properties
-
-    install_platform_virtual_machine_main
-    install_platform_container_main
-    install_container_distrobox_from_curl
-
+	#Testing
+	#install_softwares_from_archlinux_pacman_manually
 	#silverarch_release_set_logo
-    silverarch_release_set_name
+	files_etc_skel_asdf
+	files_etc_skel_shell
+	files_etc_skel_tmux
+	files_etc_skel_vim
+	files_etc_skel_xresources
+	files_etc_os_release
+	#files_usr_bin_dynamic_wallpaper
+	files_usr_share_backgrounds_silverarch
+	files_usr_share_fonts
+	#files_usr_share_silverarch_logo
+	
+    install_softwares_from_any_binary_lf
+	install_shell_zsh
+    
+	tools_backup_snaptshot_create "SilverArch installation setup command line interface (CLI) has been completed!"
 
-	tools_backup_create "SilverArch installation setup command line interface (CLI) has been completed!"
+	#install_desktop_utils
+    #install_softwares_from_archlinux_pacman_essential
+	#install_softwares_from_archlinux_pacman_laptop_battery
+	#install_softwares_from_archlinux_pacman_utilities
+    
+    #operating_system_archlinux_creating_new_user
+    #operating_system_archlinux_editing_sudo_properties
 
-    install_desktop_enviroment_main
-    install_driver_audio
-    install_driver_bluetooth
-    install_driver_printer
-    install_driver_graphic_video
-    install_network_interface
+    #install_platform_virtual_machine_main
+    #install_platform_container_main
+    #install_container_distrobox_from_curl
 
-    tools_package_manager_any_flatpak_software_setup
+	#install_display_server
+    #install_desktop_enviroment_main
+    #install_driver_audio
+    #install_driver_bluetooth
+    #install_driver_printer
+    #install_driver_graphic_video
+    #install_network_interface
 
-	tools_backup_create "SilverArch installation setup graphical user interface (GUI) has been completed!"
+    #tools_package_manager_any_flatpak_software_setup
+
+	#tools_backup_snaptshot_create "SilverArch installation setup graphical user interface (GUI) has been completed!"
     
     display_message_success "Script has been finished!"
-    display_message_warning "Verify if everything is okay and then go back to the livecd mode by typing:\n\t> $ exit\n\t> $ umount -a\n\t> $ systemctl reboot"
+    
+	display_message_warning "Verify if everything is okay and then go back to the livecd mode by typing:\n\t> $ exit\n\t> $ umount -a\n\t> $ systemctl reboot"
 }
 
 calling_archlinux_part_03(){
@@ -3935,7 +4109,7 @@ calling_fedora(){
 #label_must_be_improved
 calling_global_softwares(){
     #ASDF
-	tools_package_manager_any_asdf_software_setup
+	tools_package_manager_any_asdf_software_setup "$HOME/.asdf"
 
     #Programming language plugins
 	install_plugin_from_any_asdf_java
@@ -3966,7 +4140,7 @@ calling_global_softwares(){
     tools_package_manager_any_snap_software_setup
 
     #Vim - Vundle
-    tools_package_manager_any_vim_vundle_software_setup
+    tools_package_manager_any_vim_vundle_software_setup "$HOME"
 
     #Containers
     download_container_distrobox_image
@@ -3978,7 +4152,6 @@ calling_global_softwares(){
 
 calling_system_appearance(){
     install_softwares_from_any_binary_oh_my_posh
-    appearance_fonts
     appearance_settings_desktop_environment_gnome
     appearance_shell_theme_starship
     appearance_theme_gtk_adwaita
@@ -3994,10 +4167,19 @@ calling_testing(){
     #tools_package_manager_any_asdf_software_setup
 	tools_check_if_internet_connection_exists
 	#connecting_internet_wifi
-	#tools_backup_create
+	#tools_backup_snaptshot_create
 
     #tools_string_replace_backslash_to_forward_slash "C:\foo\bar.xml"
     #tools_string_replace_forward_slash_to_backslash_cancelled "/tmp/.mozilla/"
+}
+
+calling_update(){
+    tools_check_if_internet_connection_exists
+    tools_check_if_user_has_root_previledges
+
+    tools_download_file "$SILVERARCH_SCRIPT_LINK_MAIN" "/usr/bin/"
+    mv /usr/bin/silverarch.sh /usr/bin/silverarch
+	tools_give_executable_permission /mnt/usr/bin/silverarch
 }
 
 #############################
@@ -4018,5 +4200,6 @@ case $AUX1 in
     "-g" | "--global-softwares") calling_global_softwares ;;
     "-s" | "--system-appearance") calling_system_appearance ;;
     "-t" | "--testing") calling_testing ;;
+	"-u" | "--update") calling_update ;;
 	*) echo -e "$MESSAGE_ERROR" ;;
 esac
