@@ -106,7 +106,7 @@ This script supports Alpine, ArchLinux and Fedora operating systems.
 $TERMINAL_COLOR_ORANGE Basic script file options $TERMINAL_COLOR_END
 -h\t--help\t-?\t\t\tDisplay this help message
 -e\t--edit\t\t\t\tEdit this script file
--b\t--backup\t\t\t\tSilverArch backup
+-b\t--backup\t\t\tSilverArch backup
 
 $TERMINAL_COLOR_BLUE Alpine installation setup $TERMINAL_COLOR_END
 -al-p01\t--alpine-part-01\t\tInstall ArchLinux system base $TERMINAL_COLOR_RED_LIGHT (ONLY ROOT) $TERMINAL_COLOR_END
@@ -198,7 +198,7 @@ tools_backup_snaptshot_create(){
 
 	case $BACKUP_TOOL in
 		"btrfk") display_message_empty ;;
-		"snapper") : ;;
+		"snapper") snapper -c root create -c timeline --description "$1" ;; #Remove read only
 		"timeshift")
 			timeshift --btrfs #Change Timeshift engine
 			timeshift --create --comments "$1" --tags D
@@ -243,7 +243,8 @@ tools_backup_snapshot_list(){
 	
 	case $BACKUP_TOOL in
 		"btrfk") display_message_empty ;;
-		"snapper") snapper list ;;
+		#"snapper") snapper list ;;
+		"snapper") snapper -c root list ;; #root == $USER ;;
 		"timeshift") timeshift --list ;;
 		*) display_message_empty ;;
 	esac
@@ -266,8 +267,14 @@ tools_backup_setup(){
 	case $BACKUP_TOOL in
 		"btrfk") display_message_empty ;;
 		"snapper") 
+			#Command line interface (CLI)
 			tools_package_manager_archlinux_pacman_software_install \
 				snapper
+
+			#Graphic user interface (GUI)
+			#git clone https://aur.archlinux.org/snapper-gui-git.git
+			#cd snapper-gui-git/
+			#makepkg -si PKGBUILD
 			;;
 		"timeshift") display_message_empty ;;
 		*) display_message_empty ;;
@@ -4103,6 +4110,38 @@ calling_archlinux_part_02(){
     #install_desktop_enviroment_main
 	#install_desktop_utils
     	#install_driver_audio #Default
+
+	#Configure Snapper
+	#umount /.snapshots/
+	#rm -fr /.snapshots/
+	#snapper -c root create-config /
+	#tools_edit_file /etc/snapper/configs/root
+		#Replace
+			#ALLOW_USERS=""
+		#To
+			#ALLOW_USERS="$QUESTION_USERNAME"
+	#chmod a+rx /.snapshots/
+	#systemctl enable --now snapper-timeline.timer
+	#systemctl enable --now snapper-cleanup.timer
+	#systemctl enable --now grub-btrfs.path
+	#reboot
+	#snapper -c root list #root = #$USER
+	#snapper -c root create -c timeline --description 'After install'
+	#snapper -c root list
+	#reboot
+	#Remove read only
+	#snapper -c root create -c timeline --description 'Before GUI'
+	#snapper -c root list
+	#
+	#git clone https://aur.archlinux.org/snapper-gui-git.git
+	#cd snapper-gui-git/
+	#makepkg -si PKGBUILD
+	#
+	#snapper -c root list
+	#btrfs property list -ts /.snapshots/$NUMBER/snapshot/ #3
+	#btrfs property set -ts /.snapshots/$NUMBER/snapshot/ ro false #3
+	#
+	#---
 
     #install_softwares_from_archlinux_pacman_essential
 	#install_softwares_from_archlinux_pacman_laptop_battery
