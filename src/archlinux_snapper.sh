@@ -5,6 +5,7 @@
 ##############################
 #
 #- [How to install Arch Linux with BTRFS & Snapper](https://www.youtube.com/watch?v=sm_fuBeaOqE)
+#curl https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/archlinux_snapper.sh
 ##############################
 
 ##############################
@@ -73,8 +74,11 @@ part_01(){
 	pacstrap /mnt/ base linux linux-firmware $EDITOR snapper
 	genfstab -U /mnt/ >> /mnt/etc/fstab
 
-	cp $0 /mnt/root/archlinux_snapper.sh
-	chmod +x /mnt/root/archlinux_snapper.sh
+	#cp $0 /mnt/root/archlinux_snapper.sh
+	cp $0 /mnt/usr/bin/archlinux_snapper.sh
+
+	#chmod +x /mnt/root/archlinux_snapper.sh
+	chmod +x /mnt/usr/bin/archlinux_snapper.sh
 
 	arch-chroot /mnt/
 }
@@ -86,6 +90,8 @@ part_02(){
 
 	$EDITOR /etc/locale.gen #Uncomment #en_US.UTF-8 UTF-8
 	locale-gen
+	
+	echo -e "LANG=en_US.UTF-8" > /etc/locale.conf
 	$EDITOR /etc/locale.conf #Insert line: LANG=en_US.UTF-8
 
 	echo -e "$QUESTION_HOST" >> /etc/hostname
@@ -117,18 +123,18 @@ part_02(){
 
 	systemctl enable NetworkManager
 
+	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
+
+	#Tested so far
+
 	#grub-install --target=x86_84-efi --efi-directory=/boot/ --bootloader-id=GRUB
-	grub-install --target=x86_84-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB
-	grub-mkconfig -o /boot/grub/grub.cfg
+	#grub-install --target=x86_84-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB
+	#grub-mkconfig -o /boot/grub/grub.cfg
 
 	#useradd -mG wheel $QUESTION_USERNAME
 	#passwd $QUESTION_USERNAME
 
-	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
-
-	exit
-	umount -a
-	reboot
+	echo -e "Type: exit ; then: umount -a && reboot"
 }
 
 #Login as root
@@ -160,4 +166,3 @@ case $AUX1 in
 	"-p3") part_03 ;;
 	*) echo -e "$MESSAGE_ERROR" ;;
 esac
-curl https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/archlinux_snapper.sh
