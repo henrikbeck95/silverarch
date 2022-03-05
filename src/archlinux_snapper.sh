@@ -1,16 +1,25 @@
 #!/usr/bin/env sh
 
 ##############################
-#References
+#Instructions
 ##############################
 #
+#rfkill unblock wifi
+#iwctl device wlan0 set-property Powered on
+#iwctl station wlan0 scan
+#iwctl station wlan0 connect <wifi_network_name>
+#ping -c 3 archlinux.org
+#
+#curl -L -O https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/archlinux_snapper.sh
+#
 #- [How to install Arch Linux with BTRFS & Snapper](https://www.youtube.com/watch?v=sm_fuBeaOqE)
-#curl https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/archlinux_snapper.sh
 ##############################
 
 ##############################
 #Declaring variables
 ##############################
+
+AUX1=$1
 
 #EDITOR="nano"
 EDITOR="vim"
@@ -45,8 +54,8 @@ part_01(){
 	lsblk
 	cfdisk
 
-	#mkfs.fat -F32 /dev/sda1
-	mkfs.btrfs -f /dev/sda1
+	mkfs.fat -F32 /dev/sda1
+	#mkfs.btrfs -f /dev/sda1
 	mkfs.btrfs -f /dev/sda2
 
 	mount $PARTITION_ROOT /mnt/
@@ -92,10 +101,7 @@ part_02(){
 	locale-gen
 	
 	echo -e "LANG=en_US.UTF-8" > /etc/locale.conf
-	$EDITOR /etc/locale.conf #Insert line: LANG=en_US.UTF-8
-
 	echo -e "$QUESTION_HOST" >> /etc/hostname
-	$EDITOR /etc/hostname #biomachine
 
 	echo -e "
 	127.0.0.1\t\tlocalhost
@@ -127,12 +133,15 @@ part_02(){
 
 	#Tested so far
 
+	echo -e "GRUB must be installed"
+
 	#grub-install --target=x86_84-efi --efi-directory=/boot/ --bootloader-id=GRUB
 	#grub-install --target=x86_84-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB
 	#grub-mkconfig -o /boot/grub/grub.cfg
 
 	#useradd -mG wheel $QUESTION_USERNAME
 	#passwd $QUESTION_USERNAME
+
 
 	echo -e "Type: exit ; then: umount -a && reboot"
 }
