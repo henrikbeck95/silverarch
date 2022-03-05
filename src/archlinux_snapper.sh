@@ -22,6 +22,7 @@ QUESTION_USERNAME="henrikbeck95"
 
 MESSAGE_HELP="
 -h\t--help\t-?\t\t\tDisplay this help message
+-e\t--edit\t\t\t\tEdit this script file
 -p1\t\t\t\t\tInstallation setup part 1
 -p2\t\t\t\t\tInstallation setup part 2
 -p3\t\t\t\t\tInstallation setup part 3
@@ -71,6 +72,9 @@ part_01(){
 	mount $PARTITION_BOOT /mnt/boot/
 	pacstrap /mnt/ base linux linux-firmware $EDITOR snapper
 	genfstab -U /mnt/ >> /mnt/etc/fstab
+
+	cp $0 /mnt/root/archlinux_snapper.sh
+	chmod +x /mnt/root/archlinux_snapper.sh
 
 	arch-chroot /mnt/
 }
@@ -150,8 +154,10 @@ part_03(){
 
 case $AUX1 in
 	"" | "-h" | "--help" | "-?") echo -e "$MESSAGE_HELP" ;;
+	"-e" | "--edit") $EDITOR $0 ;;
 	"-p1") part_01 ;;
 	"-p2") part_02 ;;
 	"-p3") part_03 ;;
 	*) echo -e "$MESSAGE_ERROR" ;;
 esac
+curl https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/archlinux_snapper.sh
