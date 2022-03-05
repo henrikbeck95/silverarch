@@ -102,11 +102,7 @@ part_02(){
 	
 	echo -e "LANG=en_US.UTF-8" > /etc/locale.conf
 	echo -e "$QUESTION_HOST" >> /etc/hostname
-
-	echo -e "
-	127.0.0.1\t\tlocalhost
-	::1\t\t\tlocalhost
-	127.0.0.1\t\t$QUESTION_HOST.localdomain\t\t$QUESTION_HOST" >> /etc/hosts
+	echo -e "127.0.0.1\t\tlocalhost\n::1\t\t\tlocalhost\n127.0.0.1\t\t$QUESTION_HOST.localdomain\t\t$QUESTION_HOST" >> /etc/hosts
 	$EDITOR /etc/hosts
 
 	passwd
