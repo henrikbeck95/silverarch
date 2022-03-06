@@ -33,6 +33,8 @@ QUESTION_USERNAME="henrikbeck95"
 MESSAGE_HELP="
 -h\t--help\t-?\t\t\tDisplay this help message
 -e\t--edit\t\t\t\tEdit this script file
+-g\t--grub\t\t\t\tInstall GRUB
+-d\t--desktop-environment\t\tInstall desktop enviroment
 -p1\t\t\t\t\tInstallation setup part 1
 -p2\t\t\t\t\tInstallation setup part 2
 -p3\t\t\t\t\tInstallation setup part 3
@@ -58,9 +60,8 @@ tools_backup_snapper_configure(){
 	#ALLOW_USERS="" to ALLOW_USERS="$QUESTION_USERNAME"
 	#Change all the limits for timeline cleanup to 0 value
 
-
 	#Create a /boot/ directory backup when Linux kernel gets updated
-	echo -e "[Trigger]\nOperation = Upgrade\nOperation = Install\nOperation = Remove\nType = Package\nTarget = linux*\n\n[Action]\nDepends = rsync\nDescription = Backing up /boot/ directory when Linux kernel gets updated\nWhen = PReTransaction\nExec = /usr/bin/rsync -a delete /boot/ /.bootbackup/" > /usr/share/libalpm/hooks/50_bootbackup.hook
+	echo -e "[Trigger]\nOperation = Upgrade\nOperation = Install\nOperation = Remove\nType = Package\nTarget = linux*\n\n[Action]\nDepends = rsync\nDescription = Backing up /boot/ directory when Linux kernel gets updated\nWhen = PreTransaction\nExec = /usr/bin/rsync -a delete /boot/ /.bootbackup/" > /usr/share/libalpm/hooks/50_bootbackup.hook
 	$EDITOR /usr/share/libalpm/hooks/50_bootbackup.hook
 
 	chmod a+rx /.snapshots/
@@ -120,7 +121,40 @@ tools_repository_pacman(){
 	cd -
 
 	pacman -Sy archlinux-keyring
-	pacman -Syyuu
+	#pacman -Syyuu
+	pacman -Syyy
+}
+
+tools_grub_install(){
+	#grub-install --target=x86_84-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB
+	grub-install --target=x86_84-efi --efi-directory=/boot/ --bootloader-id=GRUB
+	grub-mkconfig -o /boot/grub/grub.cfg
+}
+
+tools_desktop_environment_install(){
+	#Desktop environment: KDE Plasma
+	pacman -S \
+		xorg \
+		xorg-server \
+		xdg-utils \
+		xf86-video-qxl \
+		xf86-video-intel \
+		sddm \
+		plasma \
+		materia-kde \
+		alacritty
+
+		#xf86-video-amdgpu \
+		#nvidia \
+		#nvidia-utils \
+		#plasma-wayland-session
+
+	#Desktop environment: Gnome
+	#pacman -S \
+		#gdm \
+		#gnome \
+		#gnome-extra
+	#systemctl enable gdm
 }
 
 ##############################
@@ -129,7 +163,7 @@ tools_repository_pacman(){
 
 part_01(){
 	#tools_repository_pacman
-	pacman -Syyuu
+	pacman -Syyy
 
 	#pacman -S reflector
 	#reflector -c Brazil -a 24 --sort rate --save /etc/pacman.d/mirrorlist
@@ -174,7 +208,6 @@ part_01(){
 }
 
 part_02(){
-	#ln -sf /usr/share/zoneinfo/Europe/Zurich /etc/localtime
 	ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 	hwclock --systohc
 
@@ -186,7 +219,6 @@ part_02(){
 	echo -e "127.0.0.1\t\tlocalhost\n::1\t\t\tlocalhost\n127.0.0.1\t\t$QUESTION_HOST.localdomain\t\t$QUESTION_HOST" > /etc/hosts
 
 	passwd
-	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
 
 	tools_repository_pacman
 
@@ -209,9 +241,7 @@ part_02(){
 
 	systemctl enable NetworkManager
 
-	#grub-install --target=x86_84-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB
-	grub-install --target=x86_84-efi --efi-directory=/boot/ --bootloader-id=GRUB
-	grub-mkconfig -o /boot/grub/grub.cfg
+	tools_grub_install
 
 	echo -e "Type: exit ; then: umount -a && reboot"
 }
@@ -220,41 +250,18 @@ part_03(){
 	nmtui
 
 	tools_backup_snapper_configure
-
 	tools_backup_snapper_create "After basic ArchLinux installation setup"
 
+	pacman -S flatpak
 	flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
 	tools_backup_snapper_create "After Flatpak installation setup"
 
-	#Desktop environment: KDE Plasma
-	pacman -S \
-		xorg \
-		xorg-server \
-		xdg-utils \
-		xf86-video-qxl \
-		xf86-video-intel \
-		sddm \
-		plasma \
-		materia-kde
-		#xf86-video-amdgpu \
-		#nvidia \
-		#nvidia-utils xorg \
-		#plasma-wayland-session
-
-	#Desktop environment: Gnome
-	#pacman -S \
-		#gdm \
-		#gnome \
-		#gnome-extra
-	#systemctl enable gdm
-
+	tools_desktop_environment_install
 	tools_backup_snapper_create "After KDE Plasma desktop environment installation setup"
 
 	useradd -mG wheel $QUESTION_USERNAME
 	passwd $QUESTION_USERNAME
-
-	pacman -S alacritty
+	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
 
 	systemctl enable --now sddm
 
@@ -264,6 +271,8 @@ part_03(){
 	#git clone https://aur.archlinux.org/snapper-gui-git.git
 	#cd ./snapper-gui-git.git
 	#makepkg -si PKGBUILD
+
+	echo -e "Type: reboot"
 }
 
 ##############################
@@ -273,6 +282,8 @@ part_03(){
 case $AUX1 in
 	"" | "-h" | "--help" | "-?") echo -e "$MESSAGE_HELP" ;;
 	"-e" | "--edit") $EDITOR $0 ;;
+	"-g" | "--grub") tools_grub_install ;;
+	"-d" | "--desktop-environment") tools_desktop_environment_install ;;
 	"-p1") part_01 ;;
 	"-p2") part_02 ;;
 	"-p3") part_03 ;;
