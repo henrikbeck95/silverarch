@@ -104,13 +104,21 @@ tools_backup_snapper_restore(){
 
 tools_repository_pacman(){
 	cd /etc/pacman.d/
+
+	if [[ -f /etc/pacman.d/mirrorlist ]]; then
+		rm /etc/pacman.d/mirrorlist
+	fi
+
 	curl -L -O "https://archlinux.org/mirrorlist/?country=all&protocol=http&protocol=https&ip_version=4"
-	mv /etc/pacman.d/\?country\=all /etc/pacman.d/mirrorlist_original
+
+	mv \
+		"/etc/pacman.d/?country=all&protocol=http&protocol=https&ip_version=4" \
+		/etc/pacman.d/mirrorlist_original
+
 	tools_string_remove_first_character_from_each_line_in_a_file "/etc/pacman.d/mirrorlist_original" "/etc/pacman.d/mirrorlist"
 	$EDITOR /etc/pacman.d/mirrorlist
 	cd -
 
-	pacman -Syyuu
 	pacman -Sy archlinux-keyring
 	pacman -Syyuu
 }
@@ -120,11 +128,12 @@ tools_repository_pacman(){
 ##############################
 
 part_01(){
-	tools_repository_pacman
+	#tools_repository_pacman
+	pacman -Syyuu
 
 	#pacman -S reflector
-	#reflector -c Brazil -a 24 --sort rete --save /etc/pacman.d/mirrorlist
-	#reflector -c Brazil --sort rete --save /etc/pacman.d/mirrorlist
+	#reflector -c Brazil -a 24 --sort rate --save /etc/pacman.d/mirrorlist
+	#reflector -c Brazil --sort rate --save /etc/pacman.d/mirrorlist
 
 	timedatectl set-ntp true
 	lsblk
@@ -173,8 +182,8 @@ part_02(){
 	locale-gen
 	
 	echo -e "LANG=en_US.UTF-8" > /etc/locale.conf
-	echo -e "$QUESTION_HOST" >> /etc/hostname
-	echo -e "127.0.0.1\t\tlocalhost\n::1\t\t\tlocalhost\n127.0.0.1\t\t$QUESTION_HOST.localdomain\t\t$QUESTION_HOST" >> /etc/hosts
+	echo -e "$QUESTION_HOST" > /etc/hostname
+	echo -e "127.0.0.1\t\tlocalhost\n::1\t\t\tlocalhost\n127.0.0.1\t\t$QUESTION_HOST.localdomain\t\t$QUESTION_HOST" > /etc/hosts
 
 	passwd
 	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
