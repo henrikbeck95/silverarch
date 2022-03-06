@@ -41,14 +41,91 @@ MESSAGE_HELP="
 MESSAGE_ERROR="Invalid option for $0!\n$MESSAGE_HELP"
 
 ##############################
-#Functions
+#Functions - tools
+##############################
+
+tools_string_remove_first_character_from_each_line_in_a_file(){
+	cat $1 | sed 's/.\(.*\)/\1/' > $2
+	#cut -c 2- < $1
+}
+
+tools_backup_snapper_configure(){
+	umount /.snapshots/
+	rm -fr /.snapshots/
+	snapper -c root create-config /
+
+	$EDITOR /etc/snapper/configs/root #Replace the lines:
+	#ALLOW_USERS="" to ALLOW_USERS="$QUESTION_USERNAME"
+	#Change all the limits for timeline cleanup to 0 value
+
+
+	#Create a /boot/ directory backup when Linux kernel gets updated
+	echo -e "[Trigger]\nOperation = Upgrade\nOperation = Install\nOperation = Remove\nType = Package\nTarget = linux*\n\n[Action]\nDepends = rsync\nDescription = Backing up /boot/ directory when Linux kernel gets updated\nWhen = PReTransaction\nExec = /usr/bin/rsync -a delete /boot/ /.bootbackup/" > /usr/share/libalpm/hooks/50_bootbackup.hook
+	$EDITOR /usr/share/libalpm/hooks/50_bootbackup.hook
+
+	chmod a+rx /.snapshots/
+
+	systemctl enable --now snapper-timeline.timer
+	systemctl enable --now snapper-cleanup.timer
+	systemctl enable --now grub-btrfs.path
+
+	#exit
+	#reboot
+}
+
+tools_backup_snapper_create(){
+	tools_backup_snapper_list
+	snapper -c root create -c timeline --description "$1"
+	tools_backup_snapper_list
+}
+
+tools_backup_snapper_list(){
+	snapper -c root list
+	#snapper list -t pre-post
+}
+
+tools_backup_snapper_restore(){
+	mount $PARTITION_ROOT /mnt/
+	$EDITOR /mnt/@snapshots/*/info.xml
+
+	#rm -fr /mnt/@/
+
+	#Restoring
+	#btrfs subvol snapshots /mnt/@snapshots/2/snapshot /mnt/@/
+	#reboot
+
+	#Check
+	#btrfs property list -ts /.snapshots/3/snapshot/
+	#Set
+	#btrfs property set -ts /.snapshots/3/snapshot/ ro false
+
+	#reboot
+}
+
+tools_repository_pacman(){
+	cd /etc/pacman.d/
+	curl -L -O "https://archlinux.org/mirrorlist/?country=all&protocol=http&protocol=https&ip_version=4"
+	mv /etc/pacman.d/\?country\=all /etc/pacman.d/mirrorlist_original
+	tools_string_remove_first_character_from_each_line_in_a_file "/etc/pacman.d/mirrorlist_original" "/etc/pacman.d/mirrorlist"
+	$EDITOR /etc/pacman.d/mirrorlist
+	cd -
+
+	pacman -Syyuu
+	pacman -Sy archlinux-keyring
+	pacman -Syyuu
+}
+
+##############################
+#Functions - normal
 ##############################
 
 part_01(){
 	#pacman -S reflector
 	#reflector -c Brazil -a 24 --sort rete --save /etc/pacman.d/mirrorlist
 	#reflector -c Brazil --sort rete --save /etc/pacman.d/mirrorlist
-	pacman -Syyy
+
+	#pacman -Syyy
+	tools_repository_pacman
 
 	timedatectl set-ntp true
 	lsblk
@@ -103,10 +180,16 @@ part_02(){
 	echo -e "LANG=en_US.UTF-8" > /etc/locale.conf
 	echo -e "$QUESTION_HOST" >> /etc/hostname
 	echo -e "127.0.0.1\t\tlocalhost\n::1\t\t\tlocalhost\n127.0.0.1\t\t$QUESTION_HOST.localdomain\t\t$QUESTION_HOST" >> /etc/hosts
-	$EDITOR /etc/hosts
 
 	passwd
+	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
 
+	#useradd -mG wheel $QUESTION_USERNAME
+	#passwd $QUESTION_USERNAME
+
+	tools_repository_pacman
+
+	#Installation
 	pacman -S \
 		grub \
 		grub-btrfs \
@@ -125,38 +208,49 @@ part_02(){
 
 	systemctl enable NetworkManager
 
-	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
-
-	#Tested so far
-
-	echo -e "GRUB must be installed"
-
-	#grub-install --target=x86_84-efi --efi-directory=/boot/ --bootloader-id=GRUB
 	#grub-install --target=x86_84-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB
-	#grub-mkconfig -o /boot/grub/grub.cfg
-
-	#useradd -mG wheel $QUESTION_USERNAME
-	#passwd $QUESTION_USERNAME
-
+	grub-install --target=x86_84-efi --efi-directory=/boot/ --bootloader-id=GRUB
+	grub-mkconfig -o /boot/grub/grub.cfg
 
 	echo -e "Type: exit ; then: umount -a && reboot"
 }
 
-#Login as root
 part_03(){
 	nmtui
 
+	tools_backup_snapper_configure
+
+	#tools_backup_snapper_create "After basic ArchLinux installation setup"
 	pacman -S \
-		xdg-utils
+		xorg \
+		xorg-server \
+		xdg-utils \
+		xf86-video-qxl \
+		xf86-video-intel \
+		sddm \
+		plasma \
+		materia-kde
+		#xf86-video-amdgpu \
+		#nvidia \
+		#nvidia-utils xorg \
+		#plasma-wayland-session
 
-	pacman -S xf86-video-qxl xf86-video-intel xf86-video-amdgpu nvidia nvidia-utils xorg
+	#systemctl enable --now sddm
 
-	#pacman -S gdm gnome gnome-extra
+	#pacman -S \
+		#gdm \
+		#gnome \
+		#gnome-extra
 	#systemctl enable gdm
 
+	#tools_backup_snapper_create "AfterInstall"
+	#tools_backup_snapper_create "After KDE Plasma desktop environment installation setup"
+	#tools_backup_snapper_create "After Flatpak installation setup"
 
-
-	#systemctl enable
+	#paru -S snapper-gui-git
+	#git clone https://aur.archlinux.org/snapper-gui-git.git
+	#cd ./snapper-gui-git.git
+	#makepkg -si PKGBUILD
 }
 
 ##############################
