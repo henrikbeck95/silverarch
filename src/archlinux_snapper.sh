@@ -120,19 +120,17 @@ tools_repository_pacman(){
 ##############################
 
 part_01(){
+	tools_repository_pacman
+
 	#pacman -S reflector
 	#reflector -c Brazil -a 24 --sort rete --save /etc/pacman.d/mirrorlist
 	#reflector -c Brazil --sort rete --save /etc/pacman.d/mirrorlist
-
-	#pacman -Syyy
-	tools_repository_pacman
 
 	timedatectl set-ntp true
 	lsblk
 	cfdisk
 
 	mkfs.fat -F32 /dev/sda1
-	#mkfs.btrfs -f /dev/sda1
 	mkfs.btrfs -f /dev/sda2
 
 	mount $PARTITION_ROOT /mnt/
@@ -160,10 +158,7 @@ part_01(){
 	pacstrap /mnt/ base linux linux-firmware $EDITOR snapper
 	genfstab -U /mnt/ >> /mnt/etc/fstab
 
-	#cp $0 /mnt/root/archlinux_snapper.sh
 	cp $0 /mnt/usr/bin/archlinux_snapper.sh
-
-	#chmod +x /mnt/root/archlinux_snapper.sh
 	chmod +x /mnt/usr/bin/archlinux_snapper.sh
 
 	arch-chroot /mnt/
@@ -183,9 +178,6 @@ part_02(){
 
 	passwd
 	EDITOR=vim visudo #Uncomment the: # %wheel ALL=(ALL) ALL
-
-	#useradd -mG wheel $QUESTION_USERNAME
-	#passwd $QUESTION_USERNAME
 
 	tools_repository_pacman
 
@@ -220,7 +212,13 @@ part_03(){
 
 	tools_backup_snapper_configure
 
-	#tools_backup_snapper_create "After basic ArchLinux installation setup"
+	tools_backup_snapper_create "After basic ArchLinux installation setup"
+
+	flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+	tools_backup_snapper_create "After Flatpak installation setup"
+
+	#Desktop environment: KDE Plasma
 	pacman -S \
 		xorg \
 		xorg-server \
@@ -235,17 +233,23 @@ part_03(){
 		#nvidia-utils xorg \
 		#plasma-wayland-session
 
-	#systemctl enable --now sddm
-
+	#Desktop environment: Gnome
 	#pacman -S \
 		#gdm \
 		#gnome \
 		#gnome-extra
 	#systemctl enable gdm
 
-	#tools_backup_snapper_create "AfterInstall"
-	#tools_backup_snapper_create "After KDE Plasma desktop environment installation setup"
-	#tools_backup_snapper_create "After Flatpak installation setup"
+	tools_backup_snapper_create "After KDE Plasma desktop environment installation setup"
+
+	useradd -mG wheel $QUESTION_USERNAME
+	passwd $QUESTION_USERNAME
+
+	pacman -S alacritty
+
+	systemctl enable --now sddm
+
+	tools_backup_snapper_create "After Creating a user and terminal emulator installation setup"
 
 	#paru -S snapper-gui-git
 	#git clone https://aur.archlinux.org/snapper-gui-git.git
