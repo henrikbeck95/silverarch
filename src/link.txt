@@ -1,1 +1,0 @@
-https://raw.githubusercontent.com/henrikbeck95/silverarch/39e7de9a4a65e4c4d61c8be5036b798c5a655219/src/archlinux_snapper.sh

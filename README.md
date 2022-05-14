@@ -2,29 +2,29 @@
 
 Elegancy. Essential. It works!
 
-<img src="./assets/silverarch_logo.png" alt="SilverArch logo" style="text-align:center;width:200px;"/>
+<div align="center">
+	<img src="./assets/silverarch_logo.png" alt="SilverArch logo" style="text-align:center;width:200px;"/>
+</div>
 
 ## Description
 
-### Definition
-
-SilverArch is an operating system based on [ArchLinux](https://archlinux.org/) and inspired on [Fedora SilverBlue](https://silverblue.fedoraproject.org/).
+SilverArch is an operating system based on [ArchLinux](https://archlinux.org/) and inspired on [Fedora SilverBlue](https://silverblue.fedoraproject.org/). This is created and maintained by [Henrik Beck](https://github.com/henrikbeck95).
 
 ### Introduction
 
 - Reasons to use SilverArch
-	1. SilverArch is a rolling release Linux distro.
-	1. SilverArch is based on ArchLinux operating system.
-	1. SilverArch is inspired on Fedora Silverblue concept.
-	1. SilverArch is up to run applications on sandbox by default.
-	1. SilverArch supports others Linux distros packages by containerization methods.
-    1. SilverArch brings a clean workspace.
-	1. SilverArch is a step ahead managing programming languages.
-	1. SilverArch creates auto backups and it is up to rollback them if you want it.
-	1. SilverArch saves a lot of storage on hard disk.
-	1. SilverArch is full customizable according to user's tastes.
-    1. SilverArch respect your freedom.
-	1. SilverArch is open source.
+	1. [x] SilverArch is a rolling release Linux distro.
+	1. [x] SilverArch is based on ArchLinux operating system.
+	1. [ ] SilverArch is inspired on Fedora Silverblue concept.
+	1. [x] SilverArch is up to run applications on sandbox by default.
+	1. [x] SilverArch supports others Linux distros packages by containerization methods. In progress...
+    1. [x] SilverArch brings a clean workspace.
+	1. [x] SilverArch is a step ahead managing programming languages.
+	1. [ ] SilverArch creates auto backups and it is up to rollback them if you want it. In progress...
+	1. [x] SilverArch avoids to save a lot of storage on hard disk.
+	1. [x] SilverArch is full customizable according to user's tastes.
+    1. [x] SilverArch respect your freedom.
+	1. [x] SilverArch is open source.
     
 ### Missions and values
 
@@ -38,17 +38,16 @@ SilverArch is an operating system based on [ArchLinux](https://archlinux.org/) a
 
 ### Rolling released distro
 
-SilverArch is always up to the latest operating system version, it uses a bleeding edge development model. In others words the operating system receives continuos updates right after it is ready to be applied.
+SilverArch is always up to the latest operating system version your desktop could have. It uses a bleeding edge development model. In others words the operating system receives continuos updates right after it is ready to be applied. This is fantastic!
 
 ### Based on ArchLinux
 
-ArchLinux core is known by the users communities to be the first place where the softwares updates get available. With an extensive software catalog by default and a lot of more to check them out from ArchLinux User Repository (AUR).
+ArchLinux core is known by the users communities to be the first place where the softwares updates get available. With an extensive software catalog by default and a lot of more to check them out from ArchLinux User Repository (AUR). Furthermore there is an active community of uses to share guidelines, tutorials and troubleshoots.
 
-### Similarities between SilverArch and Fedora SilverBlue (EDITING)
+### Similarities between SilverArch and Fedora Silverblue
 
-<!--
-???
--->
+- [ ] System file tree.
+- [ ] Backup the operating system before install/uninstall a software.
 
 #### SilverArch file system tree
 
@@ -85,21 +84,20 @@ In the follow sections it is possible to check source codes examples about this 
 
 - Flatpak
 
-
 ```bash
 #!/usr/bin/env sh
-
-#Uninstallation procedure
-flatpak --user uninstall $@ && \
-	timeshift --btrfs && \
-	timeshift --create-backup "Uninstalling $@..." 2>& /dev/null && \
-	echo -e "Done!"
 
 #Installation procedure
 flatpak --user install $@ && \
 	timeshift --btrfs && \
 	timeshift --create-backup "Installing $@..." 2>& /dev/null && \
 	echo -e "Done!"	
+
+#Uninstallation procedure
+flatpak --user uninstall $@ && \
+	timeshift --btrfs && \
+	timeshift --create-backup "Uninstalling $@..." 2>& /dev/null && \
+	echo -e "Done!"
 ```
 
 - PacMan
@@ -107,30 +105,39 @@ flatpak --user install $@ && \
 ```bash
 #!/usr/bin/env sh
 
-#Uninstallation procedure
-pacman -R $@ && \
-	timeshift --btrfs && \
-	timeshift --create-backup "Uninstalling $@..." 2>& /dev/null && \
-	echo -e "Done!"
-
 #Installation procedure (from ArchLinux repositories)
 pacman -S $@ && \
 	timeshift --btrfs && \
 	timeshift --create-backup "Installing $@..." 2>& /dev/null && \
 	echo -e "Done!"
-	
+
 #Installation procedure (from local packages)
 pacman -U $@ && \
 	timeshift --btrfs && \
 	timeshift --create-backup "Installing $@..." 2>& /dev/null && \
 	echo -e "Done!"
+
+#Uninstallation procedure
+pacman -R $@ && \
+	timeshift --btrfs && \
+	timeshift --create-backup "Uninstalling $@..." 2>& /dev/null && \
+	echo -e "Done!"
 ```
 
 ### Sandbox applications (EDITING)
 
-<!--
-FIREJAIL, FLATPAKS
--->
+By default SilverArch comes with [Bottles](), [Firejail]() and [Flatpak]() sandbox tools.
+
+Using these procedures your operating system becomes a safer place to be used.
+
+- Bottles
+	> The best way to install Windows applications without corrupting the operating system or being vulnerable to be affected by some virus outside from Linux. This tool is a WINE implementation whose enable the storage each Windows application in a different environment.
+
+- Firejail
+	> Use this tool to make a totally isolate Linux system file tree environment for your current application like a container. This tool can be set to exclude every data from this temporarily container when the software gets closed. Or you can set another behavior according to your taste.
+
+- Flatpak
+	> An universal package application that isolates each Flatpak app from the user's environment such as a container to protect malicious behaviors. The software installation procedure comes with all the software dependencies, including all the base graphical platform such as gtk or qt libraries. When updating an application the Flatpak system only download the files whose have been changed, nothing more.
 
 ### Install packages such as `.deb` and `.rpm` extensions on SilverArch
 
@@ -185,27 +192,38 @@ During the SilverArch installation setup it is possible to install possible to i
 		1. [X.org](https://wiki.archlinux.org/title/xorg).
 		1. [Wayland](https://wiki.archlinux.org/title/wayland).
 
-
 ### We respect your choices
 
 SilverArch does not collect or intercept your data. Any kind of telemetry are installed by any software which is installed by default. By the way if the user wants to install these kind of softwares there is no forbidden for this procedure. We understand the users have their own reasons about to do what they are doing and also known they can be penalty responsibility by their actions. SilverArch has been made to work, not to judge.
 
 Unless the user really wants to do this, SilverArch is an unbreakable operating system. SilverArch respects the users choices about changing the operating system settings about their tastes. In this scenery SilverArch cannot promise the unbreakable concept is going to be fire proofed.
 
+<!--
 ## Installation setup
 
-- ???
+- Shell Script Library
+	```bash
+	#!/usr/bin/env sh
+
+	cd /usr/local/bin/
+	curl -L -O ???
+	cd -
+	```
+
+- SilverArch installer
     ```bash
+	#!/usr/bin/env sh
+
     #Download SilverArch script file
     cd $HOME/
-    #cd /usr/bin/
     curl -L -O https://raw.githubusercontent.com/henrikbeck95/silverarch/development/src/main.sh
     mv $HOME/main.sh $HOME/silverarch
     cd -
 
     #Give executable permission
-    chmod +x $HOME/main.sh
+    chmod +x $HOME/silverarch.sh
 
     #Run the SilverArch script file
-    $HOME/main.sh --part-01
+    $HOME/silverarch.sh --part-01
     ```
+-->

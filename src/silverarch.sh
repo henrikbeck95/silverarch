@@ -15,6 +15,22 @@
 #label_operating_system		= Must be generated a version for another operating system
 
 #############################
+#Shell Script Library
+#############################
+
+if [[ -f /usr/local/bin/shell-script-library ]]; then
+	echo -e "Shell Script Library is required to procedure with this installation"
+
+	#Download the Shell Script Library
+	#cd /usr/local/bin/
+	#curl -L -O ???
+	#cd -
+	exit 1
+else
+	source /usr/local/bin/shell-script-library
+fi
+
+#############################
 #Import files
 #############################
 
@@ -2129,7 +2145,8 @@ install_platform_container_podman(){
             tools_package_manager_archlinux_pacman_software_install \
                 buildah \
                 crun \
-                podman
+                podman \
+				catatonit
 
                 #cgroups
 
