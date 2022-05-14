@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+#
+#vim ~/.config/gtk-3.0/gtk.css
+
 #############################
 #Instructions
 #############################
